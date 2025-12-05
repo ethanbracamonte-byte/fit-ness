@@ -179,7 +179,7 @@
 
     @media (min-width: 600px) {
       .form-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
     }
 
@@ -195,17 +195,25 @@
     }
 
     input[type="number"],
-    input[type="text"] {
+    input[type="text"],
+    textarea {
       padding: 6px 8px;
-      border-radius: 999px;
+      border-radius: 10px;
       border: 1px solid rgba(148, 163, 184, 0.5);
       background: #020617;
       color: var(--text);
       font-size: 0.82rem;
       outline: none;
+      resize: vertical;
     }
 
-    input:focus {
+    input[type="number"],
+    input[type="text"] {
+      border-radius: 999px;
+    }
+
+    input:focus,
+    textarea:focus {
       border-color: var(--accent2);
       box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
     }
@@ -225,6 +233,42 @@
 
     .rest-label {
       color: var(--muted);
+    }
+
+    .exercise-list {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      font-size: 0.78rem;
+    }
+
+    .exercise-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .exercise-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .exercise-item input {
+      width: 14px;
+      height: 14px;
+    }
+
+    .notes-block {
+      margin-top: 8px;
+      font-size: 0.78rem;
+    }
+
+    .notes-block label {
+      display: block;
+      margin-bottom: 4px;
     }
 
     .save-row {
@@ -256,6 +300,7 @@
     .note {
       font-size: 0.75rem;
       color: var(--muted);
+      margin-top: 4px;
     }
 
     .note span {
@@ -282,10 +327,6 @@
       padding: 3px 0;
     }
 
-    .summary-item span {
-      white-space: nowrap;
-    }
-
     .summary-day {
       color: var(--muted);
     }
@@ -305,6 +346,21 @@
 
     .summary-pain-high {
       color: var(--danger);
+    }
+
+    .summary-water {
+      color: var(--accent2);
+    }
+
+    .summary-tasks {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .summary-notes {
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-top: 2px;
     }
 
     /* Graph */
@@ -341,6 +397,10 @@
       height: 10px;
       border-radius: 999px;
       background: var(--accent);
+    }
+
+    .dot-time {
+      background: var(--accent2);
     }
 
     .footer {
@@ -388,7 +448,7 @@
           <span id="day-title">Monday</span>
           <span id="rest-label" class="summary-rest" style="display:none;">Rest day taken</span>
         </div>
-        <div class="card-sub">Log distance, time, pain, or mark a rest day.</div>
+        <div class="card-sub">Log distance, time, pain, water, notes, or mark a rest day.</div>
 
         <div class="form-grid">
           <div class="field">
@@ -403,11 +463,36 @@
             <label for="pain">Pain (0–10)</label>
             <input id="pain" type="number" step="1" min="0" max="10" placeholder="e.g. 3" />
           </div>
+          <div class="field">
+            <label for="water">Water (oz)</label>
+            <input id="water" type="number" step="1" min="0" placeholder="e.g. 80" />
+          </div>
         </div>
 
         <div class="rest-toggle">
           <input type="checkbox" id="rest-day" />
           <label for="rest-day" class="rest-label">Rest day taken (no run)</label>
+        </div>
+
+        <div class="exercise-list">
+          <div class="exercise-title">Exercise checklist</div>
+          <label class="exercise-item">
+            <input type="checkbox" id="task-warmup" />
+            <span>Warm-up done</span>
+          </label>
+          <label class="exercise-item">
+            <input type="checkbox" id="task-main" />
+            <span>Run / cardio done</span>
+          </label>
+          <label class="exercise-item">
+            <input type="checkbox" id="task-strength" />
+            <span>Strength / core done</span>
+          </label>
+        </div>
+
+        <div class="notes-block">
+          <label for="notes">Workout notes (exercises / sets / reps)</label>
+          <textarea id="notes" rows="3" placeholder="e.g. Squats 3×10, Push-ups 4×12, Plank 3×30s"></textarea>
         </div>
 
         <div class="save-row">
@@ -424,12 +509,13 @@
         <div class="card-title">
           <span>Progression Graph</span>
         </div>
-        <div class="card-sub">Bars show distance per day. Rest days are zero.</div>
+        <div class="card-sub">Bars: distance (miles) • Line: time (minutes)</div>
 
         <div class="graph-container">
           <canvas id="graph"></canvas>
           <div class="graph-legend">
             <span><span class="dot"></span> Distance (miles)</span>
+            <span><span class="dot dot-time"></span> Time (minutes)</span>
             <span id="best-label">Best distance: 0 mi</span>
           </div>
         </div>
@@ -437,7 +523,7 @@
         <div class="card-title" style="margin-top:10px;">
           <span>Week Overview</span>
         </div>
-        <div class="card-sub">Quick look at all days and rest days taken.</div>
+        <div class="card-sub">Quick look at all days, water, pain, rest, and notes.</div>
 
         <div class="summary-list" id="summary-list">
           <!-- Filled by JS -->
@@ -446,13 +532,13 @@
     </section>
 
     <footer class="footer">
-      Mon–Sun tabs • Rest day toggle • Distance graph • PRT goal: 1.5 miles &lt; 12:00
+      Mon–Sun tabs • Rest day toggle • Pain + water + checklist + notes • Distance + time graph • PRT goal: 1.5 miles &lt; 12:00
     </footer>
   </main>
 
   <script>
     (function () {
-      const STORAGE_KEY = "weekly_fitness_v1";
+      const STORAGE_KEY = "weekly_fitness_v3";
 
       const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
       const shortNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -467,6 +553,8 @@
       const distanceInput = document.getElementById("distance");
       const timeInput = document.getElementById("time");
       const painInput = document.getElementById("pain");
+      const waterInput = document.getElementById("water");
+      const notesInput = document.getElementById("notes");
       const restCheckbox = document.getElementById("rest-day");
       const saveBtn = document.getElementById("save-day");
       const clearWeekBtn = document.getElementById("clear-week");
@@ -476,13 +564,28 @@
       const canvas = document.getElementById("graph");
       const ctx = canvas.getContext("2d");
 
-      function defaultWeek() {
-        return Array.from({ length: 7 }, () => ({
+      const taskWarmup = document.getElementById("task-warmup");
+      const taskMain = document.getElementById("task-main");
+      const taskStrength = document.getElementById("task-strength");
+
+      function defaultDay() {
+        return {
           distance: 0,
           time: 0,
           pain: null,
-          rest: false
-        }));
+          rest: false,
+          water: 0,
+          checklist: {
+            warmup: false,
+            main: false,
+            strength: false
+          },
+          notes: ""
+        };
+      }
+
+      function defaultWeek() {
+        return Array.from({ length: 7 }, () => defaultDay());
       }
 
       function loadWeek() {
@@ -491,12 +594,23 @@
           if (!raw) return defaultWeek();
           const parsed = JSON.parse(raw);
           if (!Array.isArray(parsed) || parsed.length !== 7) return defaultWeek();
-          return parsed.map(d => ({
-            distance: Number(d.distance) || 0,
-            time: Number(d.time) || 0,
-            pain: d.pain === null || d.pain === undefined ? null : Number(d.pain),
-            rest: !!d.rest
-          }));
+          return parsed.map(d => {
+            const base = defaultDay();
+            if (!d || typeof d !== "object") return base;
+            return {
+              distance: Number(d.distance) || 0,
+              time: Number(d.time) || 0,
+              pain: d.pain === null || d.pain === undefined ? null : Number(d.pain),
+              rest: !!d.rest,
+              water: Number(d.water) || 0,
+              checklist: {
+                warmup: d.checklist && typeof d.checklist.warmup === "boolean" ? d.checklist.warmup : false,
+                main: d.checklist && typeof d.checklist.main === "boolean" ? d.checklist.main : false,
+                strength: d.checklist && typeof d.checklist.strength === "boolean" ? d.checklist.strength : false
+              },
+              notes: typeof d.notes === "string" ? d.notes : ""
+            };
+          });
         } catch (e) {
           return defaultWeek();
         }
@@ -530,31 +644,55 @@
           distanceInput.value = "";
           timeInput.value = "";
           painInput.value = "";
+          waterInput.value = "";
+          notesInput.value = "";
+          taskWarmup.checked = false;
+          taskMain.checked = false;
+          taskStrength.checked = false;
+
           distanceInput.disabled = true;
           timeInput.disabled = true;
           painInput.disabled = true;
+          waterInput.disabled = true;
+          notesInput.disabled = true;
+          taskWarmup.disabled = true;
+          taskMain.disabled = true;
+          taskStrength.disabled = true;
         } else {
           distanceInput.disabled = false;
           timeInput.disabled = false;
           painInput.disabled = false;
+          waterInput.disabled = false;
+          notesInput.disabled = false;
+          taskWarmup.disabled = false;
+          taskMain.disabled = false;
+          taskStrength.disabled = false;
+
           distanceInput.value = data.distance || "";
           timeInput.value = data.time || "";
           painInput.value = data.pain === null ? "" : data.pain;
+          waterInput.value = data.water || "";
+          notesInput.value = data.notes || "";
+
+          taskWarmup.checked = !!data.checklist.warmup;
+          taskMain.checked = !!data.checklist.main;
+          taskStrength.checked = !!data.checklist.strength;
         }
       }
 
       function renderSummary() {
-        // Summary list
         summaryList.innerHTML = "";
         let totalDistance = 0;
         let totalTime = 0;
         let restDays = 0;
         let bestDistance = 0;
+        let totalWater = 0;
 
         weekData.forEach((d, idx) => {
           if (d.rest) restDays++;
           totalDistance += d.distance;
           totalTime += d.time;
+          totalWater += d.water;
           if (d.distance > bestDistance) bestDistance = d.distance;
 
           const item = document.createElement("div");
@@ -582,6 +720,14 @@
           left.appendChild(daySpan);
           left.appendChild(mainSpan);
 
+          const waterSpan = document.createElement("div");
+          waterSpan.className = "summary-water";
+          if (d.water > 0) {
+            waterSpan.textContent = `${d.water} oz water`;
+          } else {
+            waterSpan.textContent = "";
+          }
+
           const painSpan = document.createElement("div");
           if (d.pain !== null && !isNaN(d.pain)) {
             painSpan.textContent = `Pain: ${d.pain}/10`;
@@ -592,26 +738,51 @@
             painSpan.textContent = "";
           }
 
+          const tasksDone =
+            (d.checklist.warmup ? 1 : 0) +
+            (d.checklist.main ? 1 : 0) +
+            (d.checklist.strength ? 1 : 0);
+          const tasksSpan = document.createElement("div");
+          tasksSpan.className = "summary-tasks";
+          if (tasksDone > 0) {
+            tasksSpan.textContent = `Checklist: ${tasksDone}/3 done`;
+          } else {
+            tasksSpan.textContent = "";
+          }
+
+          const notesSpan = document.createElement("div");
+          notesSpan.className = "summary-notes";
+          if (d.notes && d.notes.trim() !== "") {
+            const maxLen = 40;
+            const txt = d.notes.trim();
+            notesSpan.textContent =
+              txt.length > maxLen ? `Notes: ${txt.slice(0, maxLen)}…` : `Notes: ${txt}`;
+          } else {
+            notesSpan.textContent = "";
+          }
+
+          right.appendChild(waterSpan);
           right.appendChild(painSpan);
+          right.appendChild(tasksSpan);
+          right.appendChild(notesSpan);
 
           item.appendChild(left);
           item.appendChild(right);
           summaryList.appendChild(item);
         });
 
-        // Top summary strip
         const avgDistance = totalDistance / 7;
         weekSummary.innerHTML = `
           <span>Total distance: <strong>${totalDistance.toFixed(1)} mi</strong></span>
           <span>Avg per day: <strong>${avgDistance.toFixed(1)} mi</strong></span>
           <span>Rest days: <strong>${restDays}</strong></span>
+          <span>Total water: <strong>${totalWater.toFixed(0)} oz</strong></span>
         `;
 
         bestLabel.textContent = `Best distance: ${bestDistance.toFixed(1)} mi`;
       }
 
       function renderGraph() {
-        // Resize canvas for sharpness
         const width = canvas.clientWidth || 300;
         const height = canvas.clientHeight || 200;
         const dpr = window.devicePixelRatio || 1;
@@ -622,10 +793,11 @@
 
         ctx.clearRect(0, 0, width, height);
 
-        // Background grid
+        // Background
         ctx.fillStyle = "#020617";
         ctx.fillRect(0, 0, width, height);
 
+        // Grid lines
         ctx.strokeStyle = "rgba(148,163,184,0.4)";
         ctx.lineWidth = 1;
         const gridLines = 4;
@@ -637,12 +809,12 @@
           ctx.stroke();
         }
 
-        // Axes
         const paddingLeft = 32;
         const paddingBottom = 24;
         const chartHeight = height - paddingBottom - 10;
         const chartWidth = width - paddingLeft - 10;
 
+        // Axes
         ctx.strokeStyle = "rgba(148,163,184,0.7)";
         ctx.lineWidth = 1.2;
         ctx.beginPath();
@@ -651,34 +823,65 @@
         ctx.lineTo(width - 10, height - paddingBottom);
         ctx.stroke();
 
-        // Data
+        // Data arrays
         const distances = weekData.map(d => d.rest ? 0 : d.distance || 0);
+        const times = weekData.map(d => d.rest ? 0 : d.time || 0);
+
         const maxDistance = Math.max(...distances, 1);
+        const maxTime = Math.max(...times, 1);
 
         const barWidth = chartWidth / (distances.length * 1.6);
         const gap = barWidth * 0.6;
 
-        // Bars
+        const timePoints = [];
+
+        // Bars (distance) + time points
         distances.forEach((dist, idx) => {
           const x = paddingLeft + gap + idx * (barWidth + gap);
-          const barHeight = (dist / maxDistance) * (chartHeight - 10);
-          const y = height - paddingBottom - barHeight;
+          const distHeight = (dist / maxDistance) * (chartHeight - 10);
+          const y = height - paddingBottom - distHeight;
 
-          // Bar
+          // Distance bar
           const gradient = ctx.createLinearGradient(x, y, x, height - paddingBottom);
           gradient.addColorStop(0, "#22c55e");
           gradient.addColorStop(1, "#0f766e");
 
           ctx.fillStyle = gradient;
           ctx.beginPath();
-          ctx.roundRect(x, y, barWidth, barHeight, 6);
+          ctx.roundRect(x, y, barWidth, distHeight, 6);
           ctx.fill();
+
+          const centerX = x + barWidth / 2;
+
+          const timeVal = times[idx];
+          const timeHeight = (timeVal / maxTime) * (chartHeight - 10);
+          const timeY = height - paddingBottom - timeHeight;
+
+          timePoints.push({ x: centerX, y: timeY });
 
           // Day label
           ctx.fillStyle = "rgba(148,163,184,0.9)";
           ctx.font = "10px system-ui";
           ctx.textAlign = "center";
-          ctx.fillText(shortNames[idx], x + barWidth / 2, height - paddingBottom + 12);
+          ctx.fillText(shortNames[idx], centerX, height - paddingBottom + 12);
+        });
+
+        // Time line
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        timePoints.forEach((pt, idx) => {
+          if (idx === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.stroke();
+
+        // Time dots
+        ctx.fillStyle = "#38bdf8";
+        timePoints.forEach(pt => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+          ctx.fill();
         });
       }
 
@@ -686,6 +889,8 @@
         const distVal = distanceInput.value.trim();
         const timeVal = timeInput.value.trim();
         const painVal = painInput.value.trim();
+        const waterVal = waterInput.value.trim();
+        const notesVal = notesInput.value.trim();
         const isRest = restCheckbox.checked;
 
         const data = weekData[activeDay];
@@ -696,10 +901,20 @@
           data.distance = 0;
           data.time = 0;
           data.pain = null;
+          data.water = 0;
+          data.checklist = { warmup: false, main: false, strength: false };
+          data.notes = "";
         } else {
           data.distance = distVal === "" ? 0 : Math.max(0, Number(distVal));
           data.time = timeVal === "" ? 0 : Math.max(0, Number(timeVal));
           data.pain = painVal === "" ? null : Math.min(10, Math.max(0, Number(painVal)));
+          data.water = waterVal === "" ? 0 : Math.max(0, Number(waterVal));
+          data.checklist = {
+            warmup: taskWarmup.checked,
+            main: taskMain.checked,
+            strength: taskStrength.checked
+          };
+          data.notes = notesVal;
         }
 
         weekData[activeDay] = data;
@@ -722,6 +937,7 @@
       dayTabs.addEventListener("click", (e) => {
         const btn = e.target.closest(".tab-btn");
         if (!btn) return;
+        saveCurrentDay(); // save current before switching
         const d = Number(btn.getAttribute("data-day"));
         setActiveDay(d);
       });
@@ -732,6 +948,11 @@
           distanceInput.value = "";
           timeInput.value = "";
           painInput.value = "";
+          waterInput.value = "";
+          notesInput.value = "";
+          taskWarmup.checked = false;
+          taskMain.checked = false;
+          taskStrength.checked = false;
         }
         saveCurrentDay();
       });
@@ -749,7 +970,6 @@
       renderSummary();
       renderGraph();
 
-      // Redraw graph on resize
       window.addEventListener("resize", () => {
         renderGraph();
       });
