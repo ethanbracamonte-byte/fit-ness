@@ -2,16 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fitness Tracker</title>
+  <title>Weekly Strength & PRT Checklist</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Chart.js for distance/time graph -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #111827;
+      --bg: #020617;
+      --card: #020617;
       --accent: #38bdf8;
       --accent-soft: rgba(56, 189, 248, 0.15);
       --text: #e5e7eb;
@@ -35,9 +32,9 @@
     }
 
     .app {
-      max-width: 1100px;
+      max-width: 800px;
       margin: 0 auto;
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.98));
       border-radius: 24px;
       padding: 16px;
       box-shadow:
@@ -46,17 +43,17 @@
     }
 
     header {
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-      padding-bottom: 8px;
+      gap: 8px;
     }
 
     .title {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 600;
     }
 
@@ -65,7 +62,7 @@
       color: var(--muted);
     }
 
-    .date-controls {
+    .right {
       margin-left: auto;
       display: flex;
       align-items: center;
@@ -85,10 +82,9 @@
 
     button {
       cursor: pointer;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.2), rgba(15, 23, 42, 0.95));
-      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.08s ease;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.25), rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      transition: transform 0.07s ease, box-shadow 0.07s ease, border-color 0.07s ease;
       white-space: nowrap;
     }
 
@@ -103,32 +99,20 @@
       font-size: 0.75rem;
     }
 
-    select {
-      padding-right: 24px;
-      cursor: pointer;
-    }
-
     main {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.8fr);
-      gap: 14px;
-    }
-
-    @media (max-width: 840px) {
-      main {
-        grid-template-columns: minmax(0, 1fr);
-      }
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .card {
-      background: radial-gradient(circle at top, rgba(30, 64, 175, 0.55), rgba(15, 23, 42, 0.98));
+      background: radial-gradient(circle at top, rgba(30, 64, 175, 0.5), rgba(15, 23, 42, 0.98));
       border-radius: var(--radius);
       padding: 12px;
       border: 1px solid rgba(148, 163, 184, 0.28);
       box-shadow:
         0 12px 28px rgba(15, 23, 42, 0.75),
         0 0 0 1px rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(14px);
     }
 
     .card h2 {
@@ -149,16 +133,17 @@
       color: var(--muted);
     }
 
+    .day-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
     .row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       margin-bottom: 8px;
-    }
-
-    .row label {
-      font-size: 0.75rem;
-      color: var(--muted);
     }
 
     .field {
@@ -167,6 +152,11 @@
       gap: 3px;
       flex: 1;
       min-width: 90px;
+    }
+
+    .field label {
+      font-size: 0.75rem;
+      color: var(--muted);
     }
 
     input[type="number"], input[type="text"], textarea {
@@ -179,7 +169,7 @@
     }
 
     textarea {
-      min-height: 70px;
+      min-height: 60px;
       border-radius: 14px;
       resize: vertical;
     }
@@ -208,7 +198,7 @@
       flex-direction: column;
       gap: 5px;
       margin-top: 6px;
-      max-height: 210px;
+      max-height: 230px;
       overflow-y: auto;
       padding-right: 2px;
     }
@@ -219,7 +209,7 @@
       gap: 6px;
       padding: 4px 6px;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.97);
       border: 1px solid rgba(148, 163, 184, 0.35);
       font-size: 0.8rem;
     }
@@ -251,77 +241,6 @@
       color: #fecaca;
     }
 
-    .date-label {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .range-summary {
-      margin-top: 6px;
-    }
-
-    .range-summary h3 {
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-      color: var(--muted);
-    }
-
-    .range-totals {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 6px;
-      font-size: 0.75rem;
-    }
-
-    .chip {
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.75rem;
-      overflow: hidden;
-      border-radius: 10px;
-    }
-
-    thead {
-      background: rgba(15, 23, 42, 0.95);
-    }
-
-    th, td {
-      padding: 4px 6px;
-      text-align: left;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
-    }
-
-    tbody tr {
-      cursor: pointer;
-    }
-
-    tbody tr:hover {
-      background: rgba(15, 23, 42, 0.75);
-    }
-
-    .chart-wrap {
-      margin-top: 8px;
-      padding: 8px;
-      border-radius: 14px;
-      background: radial-gradient(circle at top, var(--accent-soft), rgba(15, 23, 42, 0.95));
-      border: 1px solid rgba(56, 189, 248, 0.4);
-    }
-
-    .chart-wrap h3 {
-      font-size: 0.8rem;
-      margin-bottom: 4px;
-      color: var(--muted);
-    }
-
     .hint {
       font-size: 0.7rem;
       color: var(--muted);
@@ -333,33 +252,25 @@
   <div class="app">
     <header>
       <div>
-        <div class="title">Fitness Tracker</div>
-        <div class="subtitle">Auto-filled weekly plan • Checklists • Pain • Distance • Time • Water • Weight • Notes</div>
+        <div class="title">Strength & PRT Weekly Checklist</div>
+        <div class="subtitle">Each day auto-loads your workout as a checklist you can tap off</div>
       </div>
-
-      <div class="date-controls">
-        <button class="small" id="prevBtn">&#x276E;</button>
-        <div class="date-label" id="periodLabel">Today</div>
-        <button class="small" id="nextBtn">&#x276F;</button>
-
-        <select id="viewSelect" title="Change view">
-          <option value="day">Day</option>
-          <option value="week">Week</option>
-          <option value="month">Month</option>
-          <option value="year">Year</option>
-        </select>
+      <div class="right">
+        <button class="small" id="prevDayBtn">&#x276E;</button>
+        <div id="dateDisplay" style="font-size:0.8rem; color:var(--muted);"></div>
+        <button class="small" id="nextDayBtn">&#x276F;</button>
       </div>
     </header>
 
     <main>
-      <!-- LEFT: Day details -->
       <section class="card">
         <h2>
-          Today&#39;s Details
-          <span class="tag" id="dayPlanLabel">Plan: —</span>
+          Today&#39;s Plan
+          <span class="tag" id="planNameTag">Plan: —</span>
         </h2>
+        <div class="day-label" id="weekdayLabel"></div>
 
-        <div class="row" style="margin-top:4px;">
+        <div class="row" style="margin-bottom:4px;">
           <label class="pill-toggle">
             <input type="checkbox" id="restDayToggle" />
             Rest day taken
@@ -394,20 +305,20 @@
 
         <div class="row">
           <div class="field" style="flex:1 1 100%;">
-            <label for="notesInput">Notes (exercise details, reps &amp; sets, how it felt)</label>
-            <textarea id="notesInput" placeholder="Write what you did, any pain, breathing, etc."></textarea>
+            <label for="notesInput">Notes (what you did, pain, breathing, etc.)</label>
+            <textarea id="notesInput"></textarea>
           </div>
         </div>
 
         <hr style="border:none; border-top:1px solid rgba(148,163,184,0.3); margin:6px 0;" />
 
-        <h2>Checklist <span class="tag">Auto-filled by day</span></h2>
+        <h2>Checklist <span class="tag">Auto-filled by weekday</span></h2>
 
         <div class="row">
           <div class="field">
-            <label for="newItemInput">Add checklist item</label>
+            <label for="newItemInput">Add item</label>
             <div class="row">
-              <input type="text" id="newItemInput" placeholder="Add or tweak today's plan..." />
+              <input type="text" id="newItemInput" placeholder="Add or tweak today’s tasks..." />
               <button class="small" id="addItemBtn">Add</button>
             </div>
           </div>
@@ -416,64 +327,36 @@
         <ul class="checklist" id="checklist"></ul>
 
         <div class="hint">
-          Each day is pre-loaded with the strength + PRT plan. You can still edit, add, or remove items and they’ll be saved.
-        </div>
-      </section>
-
-      <!-- RIGHT: Range summary -->
-      <section class="card">
-        <h2>
-          Range Overview
-          <span class="tag">Week / Month / Year</span>
-        </h2>
-
-        <div class="range-summary" id="rangeSummarySection" style="display:none;">
-          <h3 id="rangeTitle"></h3>
-          <div class="range-totals" id="rangeTotals"></div>
-
-          <div style="max-height:170px; overflow-y:auto; border-radius:10px; border:1px solid rgba(31,41,55,0.95);">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Dist (mi)</th>
-                  <th>Time (min)</th>
-                  <th>Pain</th>
-                  <th>Wt</th>
-                  <th>Rest</th>
-                  <th>Note</th>
-                </tr>
-              </thead>
-              <tbody id="rangeTableBody"></tbody>
-            </table>
-          </div>
-
-          <div class="chart-wrap">
-            <h3>Distance &amp; Time graph (for current range)</h3>
-            <canvas id="distanceTimeChart" height="120"></canvas>
-          </div>
-        </div>
-
-        <div class="hint">
-          Tap any row in the table to jump to that day. Switch the view (Day / Week / Month / Year) at the top.
+          This should already show items for today (e.g., on Sunday: Rest & Recovery checklist). If it’s empty, something didn’t paste right.
         </div>
       </section>
     </main>
   </div>
 
   <script>
-    const STORAGE_KEY = "fitnessTracker_v3";
+    const STORAGE_KEY = "weekly_checklist_v1";
 
-    // Weekly template: 0=Sun, 1=Mon, ... 6=Sat
-    // These are the full checklists based on your strength + PRT plan.
+    // 0 = Sunday, 1 = Monday, ... 6 = Saturday
     const WEEK_TEMPLATES = {
-      1: { // Monday – Max Strength A (Squat + Bench)
-        name: "Max Strength A – Squat & Bench",
+      0: { // SUNDAY
+        name: "Sunday – Rest & Recovery",
+        restDay: true,
+        items: [
+          "Full rest from heavy lifting and hard running",
+          "Optional: 10–20 min easy walk",
+          "5–10 min light stretching or yoga",
+          "Hydration on point (hit water goal)",
+          "Check shin pain (0–10) and general soreness",
+          "Plan next week’s sessions"
+        ]
+      },
+      1: { // MONDAY
+        name: "Monday – Max Strength A (Squat & Bench)",
         restDay: false,
         items: [
           "Warm-up: 5–10 min easy walk/bike",
-          "Dynamic warm-up: leg swings, hip circles, arm circles (5 min)",
-          "Back Squat – 3×5 heavy (full depth, controlled)",
+          "Dynamic warm-up: leg + hip mobility (5 min)",
+          "Back Squat – 3×5 heavy (full depth)",
           "Bench Press – 3×5 heavy",
           "Barbell Row – 3×5",
           "Walking Lunges – 3×8 each leg",
@@ -482,22 +365,21 @@
           "Lower body stretching 5–10 min"
         ]
       },
-      2: { // Tuesday – Easy Run + Core
-        name: "Easy Conditioning – Run + Core",
+      2: { // TUESDAY
+        name: "Tuesday – Easy Run + Core",
         restDay: false,
         items: [
           "Warm-up: 5–10 min easy walk",
-          "Easy run/jog – 15–25 min (conversational pace)",
-          "Walk to cool down – 5–10 min",
+          "Easy run/jog – 15–25 min (comfortable pace)",
+          "Cool-down walk – 5–10 min",
           "Core: Plank – 3×30 sec",
           "Core: Dead bug – 3×8 each side",
-          "Shin-friendly calf/ankle mobility – 5 min",
-          "Light stretching 5–10 min",
+          "Shin/calf mobility – 5 min",
           "Log shin pain (0–10)"
         ]
       },
-      3: { // Wednesday – Max Strength B (Deadlift + Press)
-        name: "Max Strength B – Deadlift & Press",
+      3: { // WEDNESDAY
+        name: "Wednesday – Max Strength B (Deadlift & Press)",
         restDay: false,
         items: [
           "Warm-up: 5–10 min easy bike/row",
@@ -511,23 +393,22 @@
           "Hamstring + hip stretch – 5–10 min"
         ]
       },
-      4: { // Thursday – PRT Run Focus
-        name: "PRT Run – 1.5 Mile Focus",
+      4: { // THURSDAY
+        name: "Thursday – PRT Run (1.5 Mile Focus)",
         restDay: false,
         items: [
           "Warm-up walk – 5 min",
           "Dynamic warm-up: leg swings, butt kicks, high knees – 5 min",
           "Easy jog – 5–10 min",
-          "Main: 1.5 mile run at strong but controlled pace OR",
-          "Main (alt): 3×800m faster intervals (2–3 min easy walk between)",
-          "4×20–30 sec strides (fast but smooth, full recovery)",
+          "Main: 1.5 mile run OR 3×800m intervals",
+          "4×20–30 sec strides (fast but controlled)",
           "Cool-down walk – 5–10 min",
-          "Light stretching – calves, hamstrings, quads, hips",
-          "Log time, pacing and shin pain (0–10)"
+          "Stretch calves, hamstrings, quads, hips – 5–10 min",
+          "Log time and shin pain (0–10)"
         ]
       },
-      5: { // Friday – Full-Body Strength (lighter)
-        name: "Full-Body Strength (Moderate)",
+      5: { // FRIDAY
+        name: "Friday – Full-Body Strength (Moderate)",
         restDay: false,
         items: [
           "Warm-up: 5–10 min easy cardio",
@@ -541,29 +422,17 @@
           "Stretch tight areas 5–10 min"
         ]
       },
-      6: { // Saturday – Easy/Long Run or Conditioning
-        name: "Easy / Long Run + Mobility",
+      6: { // SATURDAY
+        name: "Saturday – Easy / Long Run + Mobility",
         restDay: false,
         items: [
           "Warm-up walk – 5–10 min",
-          "Easy run/jog or brisk walk – 20–30+ min (no all-out effort)",
+          "Easy run/jog or brisk walk – 20–30+ min",
           "Cool-down walk – 5–10 min",
           "Shin + calf mobility – 5–10 min",
           "Foam roll quads, calves, glutes – 5–10 min",
           "Stretch hamstrings, hips, ankles",
           "Log distance, time and pain (0–10)"
-        ]
-      },
-      0: { // Sunday – Rest / Recovery
-        name: "Rest & Recovery",
-        restDay: true,
-        items: [
-          "Full rest from heavy lifting and hard running",
-          "Optional: 10–20 min easy walk",
-          "5–10 min light stretching or yoga",
-          "Hydration on point (hit water goal)",
-          "Plan next week’s sessions",
-          "Check soreness and shin pain (0–10)"
         ]
       }
     };
@@ -587,83 +456,22 @@
 
     function prettyDate(date) {
       return date.toLocaleDateString(undefined, {
-        weekday: "short",
+        weekday: "long",
         month: "short",
         day: "numeric",
-        year: "numeric",
+        year: "numeric"
       });
     }
 
-    // Create or load entry AND auto-apply weekly template if checklist is empty
-    function getEntryForDate(date) {
-      const iso = formatISO(date);
-      if (!data[iso]) {
-        data[iso] = {
-          restDay: false,
-          distance: "",
-          time: "",
-          pain: "",
-          water: "",
-          weight: "",
-          notes: "",
-          checklist: [],
-          planName: "",
-          manualEditedChecklist: false
-        };
-      }
-      const entry = data[iso];
-
-      // If user hasn't edited checklist yet and it's empty, use weekly template
-      if (!entry.manualEditedChecklist && (!entry.checklist || entry.checklist.length === 0)) {
-        const weekday = date.getDay(); // 0=Sun
-        const template = WEEK_TEMPLATES[weekday];
-        if (template) {
-          entry.restDay = template.restDay;
-          entry.planName = template.name;
-          entry.checklist = template.items.map(text => ({ text, done: false }));
-          saveData();
-        }
-      }
-
-      return entry;
-    }
-
-    function getWeekRange(date) {
-      const d = new Date(date);
-      const day = d.getDay(); // 0 = Sunday
-      const start = new Date(d);
-      start.setHours(0, 0, 0, 0);
-      start.setDate(start.getDate() - day);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 6);
-      return { start, end };
-    }
-
-    function getMonthRange(date) {
-      const d = new Date(date);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-      return { start, end };
-    }
-
-    function getYearRange(date) {
-      const d = new Date(date);
-      const start = new Date(d.getFullYear(), 0, 1);
-      const end = new Date(d.getFullYear(), 11, 31);
-      return { start, end };
-    }
-
     let data = loadData();
-    let currentView = "day";
-    let anchorDate = new Date();
-    let chartInstance = null;
+    let currentDate = new Date();
 
-    // DOM elements
-    const periodLabel = document.getElementById("periodLabel");
-    const dayPlanLabel = document.getElementById("dayPlanLabel");
-    const viewSelect = document.getElementById("viewSelect");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
+    // DOM
+    const dateDisplay = document.getElementById("dateDisplay");
+    const weekdayLabel = document.getElementById("weekdayLabel");
+    const planNameTag = document.getElementById("planNameTag");
+    const prevDayBtn = document.getElementById("prevDayBtn");
+    const nextDayBtn = document.getElementById("nextDayBtn");
 
     const restDayToggle = document.getElementById("restDayToggle");
     const distanceInput = document.getElementById("distanceInput");
@@ -673,46 +481,41 @@
     const weightInput = document.getElementById("weightInput");
     const notesInput = document.getElementById("notesInput");
 
+    const checklistEl = document.getElementById("checklist");
     const newItemInput = document.getElementById("newItemInput");
     const addItemBtn = document.getElementById("addItemBtn");
-    const checklistEl = document.getElementById("checklist");
 
-    const rangeSummarySection = document.getElementById("rangeSummarySection");
-    const rangeTitle = document.getElementById("rangeTitle");
-    const rangeTotals = document.getElementById("rangeTotals");
-    const rangeTableBody = document.getElementById("rangeTableBody");
-
-    function changePeriod(delta) {
-      if (currentView === "day") {
-        anchorDate.setDate(anchorDate.getDate() + delta);
-      } else if (currentView === "week") {
-        anchorDate.setDate(anchorDate.getDate() + delta * 7);
-      } else if (currentView === "month") {
-        anchorDate.setMonth(anchorDate.getMonth() + delta);
-      } else if (currentView === "year") {
-        anchorDate.setFullYear(anchorDate.getFullYear() + delta);
+    function getEntry(date) {
+      const iso = formatISO(date);
+      if (!data[iso]) {
+        const weekday = date.getDay();
+        const template = WEEK_TEMPLATES[weekday];
+        data[iso] = {
+          restDay: template ? template.restDay : false,
+          distance: "",
+          time: "",
+          pain: "",
+          water: "",
+          weight: "",
+          notes: "",
+          planName: template ? template.name : "",
+          checklist: template
+            ? template.items.map(text => ({ text, done: false }))
+            : []
+        };
+        saveData();
       }
-      render();
+      return data[iso];
     }
 
     function render() {
-      const entry = getEntryForDate(anchorDate);
+      const entry = getEntry(currentDate);
+      const iso = formatISO(currentDate);
 
-      if (currentView === "day") {
-        periodLabel.textContent = "Today · " + prettyDate(anchorDate);
-      } else if (currentView === "week") {
-        const { start, end } = getWeekRange(anchorDate);
-        periodLabel.textContent = `Week of ${prettyDate(start)} – ${prettyDate(end)}`;
-      } else if (currentView === "month") {
-        periodLabel.textContent = anchorDate.toLocaleDateString(undefined, {
-          month: "long",
-          year: "numeric",
-        });
-      } else if (currentView === "year") {
-        periodLabel.textContent = anchorDate.getFullYear().toString();
-      }
-
-      dayPlanLabel.textContent = "Plan: " + (entry.planName || "—");
+      dateDisplay.textContent = prettyDate(currentDate);
+      const weekday = currentDate.toLocaleDateString(undefined, { weekday: "long" });
+      weekdayLabel.textContent = weekday;
+      planNameTag.textContent = "Plan: " + (entry.planName || "—");
 
       restDayToggle.checked = !!entry.restDay;
       distanceInput.value = entry.distance ?? "";
@@ -723,13 +526,6 @@
       notesInput.value = entry.notes ?? "";
 
       renderChecklist(entry.checklist);
-
-      if (currentView === "day") {
-        rangeSummarySection.style.display = "none";
-      } else {
-        rangeSummarySection.style.display = "block";
-        renderRangeSummary();
-      }
     }
 
     function renderChecklist(items) {
@@ -752,15 +548,12 @@
         span.textContent = item.text;
 
         const delBtn = document.createElement("button");
-        delBtn.className = "small delete-btn";
         delBtn.textContent = "X";
+        delBtn.className = "small delete-btn";
         delBtn.addEventListener("click", () => {
           items.splice(index, 1);
-          const iso = formatISO(anchorDate);
-          const entry = data[iso];
-          if (entry) entry.manualEditedChecklist = true;
           saveData();
-          render();
+          renderChecklist(items);
         });
 
         li.appendChild(checkbox);
@@ -768,241 +561,65 @@
         li.appendChild(delBtn);
         checklistEl.appendChild(li);
       });
+
+      // If somehow it's empty, show a soft warning
+      if (items.length === 0) {
+        const li = document.createElement("li");
+        li.className = "check-item";
+        li.innerHTML = "<span class='check-text'>No tasks for today. If this is Sunday, you should see a Rest & Recovery list here.</span>";
+        checklistEl.appendChild(li);
+      }
     }
 
-    function renderRangeSummary() {
-      let range;
-      if (currentView === "week") {
-        range = getWeekRange(anchorDate);
-        rangeTitle.textContent = "This week";
-      } else if (currentView === "month") {
-        range = getMonthRange(anchorDate);
-        rangeTitle.textContent = "This month";
-      } else {
-        range = getYearRange(anchorDate);
-        rangeTitle.textContent = "This year";
-      }
-
-      const { start, end } = range;
-      const rows = [];
-      let totalDistance = 0;
-      let totalTime = 0;
-      let painSum = 0;
-      let painCount = 0;
-      let weightSum = 0;
-      let weightCount = 0;
-
-      const labels = [];
-      const distanceSeries = [];
-      const timeSeries = [];
-
-      const cursor = new Date(start);
-      cursor.setHours(0, 0, 0, 0);
-
-      while (cursor <= end) {
-        const iso = formatISO(cursor);
-        const entry = data[iso];
-        if (entry) {
-          const dist = parseFloat(entry.distance || "0") || 0;
-          const t = parseFloat(entry.time || "0") || 0;
-          const pain = entry.pain === "" || entry.pain == null ? null : Number(entry.pain);
-          const weight = entry.weight === "" || entry.weight == null ? null : Number(entry.weight);
-
-          totalDistance += dist;
-          totalTime += t;
-
-          if (pain !== null && !Number.isNaN(pain)) {
-            painSum += pain;
-            painCount++;
-          }
-          if (weight !== null && !Number.isNaN(weight)) {
-            weightSum += weight;
-            weightCount++;
-          }
-
-          labels.push(cursor.toLocaleDateString(undefined, { month: "short", day: "numeric" }));
-          distanceSeries.push(dist || null);
-          timeSeries.push(t || null);
-
-          rows.push({
-            iso,
-            dateStr: cursor.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-            dist,
-            t,
-            pain,
-            weight,
-            rest: entry.restDay ? "Yes" : "",
-            note: entry.notes ? (entry.notes.length > 20 ? entry.notes.slice(0, 20) + "…" : entry.notes) : "",
-          });
-        }
-        cursor.setDate(cursor.getDate() + 1);
-      }
-
-      rangeTotals.innerHTML = "";
-      const chips = [];
-
-      chips.push(`Total distance: ${totalDistance.toFixed(2)} mi`);
-      chips.push(`Total time: ${totalTime.toFixed(1)} min`);
-
-      if (painCount > 0) {
-        chips.push(`Avg pain: ${(painSum / painCount).toFixed(1)}`);
-      }
-      if (weightCount > 0) {
-        chips.push(`Avg weight: ${(weightSum / weightCount).toFixed(1)} lb`);
-      }
-
-      chips.forEach(text => {
-        const span = document.createElement("span");
-        span.className = "chip";
-        span.textContent = text;
-        rangeTotals.appendChild(span);
-      });
-
-      rangeTableBody.innerHTML = "";
-      rows.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.dataset.iso = row.iso;
-        tr.innerHTML = `
-          <td>${row.dateStr}</td>
-          <td>${row.dist ? row.dist.toFixed(2) : ""}</td>
-          <td>${row.t ? row.t.toFixed(1) : ""}</td>
-          <td>${row.pain ?? ""}</td>
-          <td>${row.weight ?? ""}</td>
-          <td>${row.rest}</td>
-          <td>${row.note}</td>
-        `;
-        tr.addEventListener("click", () => {
-          anchorDate = new Date(row.iso);
-          currentView = "day";
-          viewSelect.value = "day";
-          render();
-        });
-        rangeTableBody.appendChild(tr);
-      });
-
-      updateChart(labels, distanceSeries, timeSeries);
-    }
-
-    function updateChart(labels, distanceData, timeData) {
-      const canvas = document.getElementById("distanceTimeChart");
-      if (!canvas) return;
-
-      const ctx = canvas.getContext("2d");
-
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
-
-      chartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Distance (mi)",
-              data: distanceData,
-              yAxisID: "y1",
-              tension: 0.3,
-              borderWidth: 2,
-              pointRadius: 3,
-            },
-            {
-              label: "Time (min)",
-              data: timeData,
-              yAxisID: "y2",
-              tension: 0.3,
-              borderWidth: 2,
-              pointRadius: 3,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            mode: "index",
-            intersect: false,
-          },
-          plugins: {
-            legend: {
-              labels: {
-                color: "#e5e7eb",
-                font: { size: 11 },
-              },
-            },
-          },
-          scales: {
-            x: {
-              ticks: { color: "#9ca3af", font: { size: 10 } },
-              grid: { color: "rgba(55,65,81,0.6)" },
-            },
-            y1: {
-              position: "left",
-              ticks: { color: "#a5b4fc", font: { size: 10 } },
-              grid: { color: "rgba(55,65,81,0.6)" },
-            },
-            y2: {
-              position: "right",
-              ticks: { color: "#22d3ee", font: { size: 10 } },
-              grid: { drawOnChartArea: false },
-            },
-          },
-        },
-      });
-    }
-
-    // ---- event wiring ----
-    prevBtn.addEventListener("click", () => changePeriod(-1));
-    nextBtn.addEventListener("click", () => changePeriod(1));
-
-    viewSelect.addEventListener("change", () => {
-      currentView = viewSelect.value;
+    function changeDay(offset) {
+      currentDate.setDate(currentDate.getDate() + offset);
       render();
-    });
+    }
 
-    restDayToggle.addEventListener("change", () => {
-      const iso = formatISO(anchorDate);
-      const entry = data[iso] || getEntryForDate(anchorDate);
-      entry.restDay = restDayToggle.checked;
-      saveData();
-    });
+    // Attach events
+    prevDayBtn.addEventListener("click", () => changeDay(-1));
+    nextDayBtn.addEventListener("click", () => changeDay(1));
 
-    function attachInputSaver(inputEl, key) {
+    function attachSaver(inputEl, key) {
       inputEl.addEventListener("change", () => {
-        const iso = formatISO(anchorDate);
-        const entry = data[iso] || getEntryForDate(anchorDate);
+        const iso = formatISO(currentDate);
+        const entry = getEntry(currentDate);
         entry[key] = inputEl.value;
         saveData();
       });
     }
 
-    attachInputSaver(distanceInput, "distance");
-    attachInputSaver(timeInput, "time");
-    attachInputSaver(painInput, "pain");
-    attachInputSaver(waterInput, "water");
-    attachInputSaver(weightInput, "weight");
-    attachInputSaver(notesInput, "notes");
+    attachSaver(distanceInput, "distance");
+    attachSaver(timeInput, "time");
+    attachSaver(painInput, "pain");
+    attachSaver(waterInput, "water");
+    attachSaver(weightInput, "weight");
+    attachSaver(notesInput, "notes");
+
+    restDayToggle.addEventListener("change", () => {
+      const entry = getEntry(currentDate);
+      entry.restDay = restDayToggle.checked;
+      saveData();
+    });
 
     addItemBtn.addEventListener("click", () => {
       const text = newItemInput.value.trim();
       if (!text) return;
-      const iso = formatISO(anchorDate);
-      const entry = data[iso] || getEntryForDate(anchorDate);
+      const entry = getEntry(currentDate);
       entry.checklist.push({ text, done: false });
-      entry.manualEditedChecklist = true;
       newItemInput.value = "";
       saveData();
       renderChecklist(entry.checklist);
     });
 
-    newItemInput.addEventListener("keydown", e => {
+    newItemInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         addItemBtn.click();
       }
     });
 
-    // Initial render
+    // Initial render (today). If today is Sunday, you should see the Sunday Rest checklist.
     render();
   </script>
 </body>
