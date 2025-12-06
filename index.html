@@ -2,17 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Weekly Fitness Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitness Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Chart.js for distance/time graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
-      --bg: #020617;
-      --bg-card: #0b1120;
-      --accent: #22c55e;
-      --accent-soft: rgba(34, 197, 94, 0.15);
-      --accent2: #38bdf8;
+      --bg: #0f172a;
+      --card: #111827;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
       --text: #e5e7eb;
-      --muted: #9ca3af;
+      --muted: #6b7280;
       --danger: #f97373;
       --radius: 16px;
     }
@@ -25,955 +28,1040 @@
     }
 
     body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #1d283a 0, #020617 40%, #000 100%);
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
       color: var(--text);
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
     }
 
     .app {
-      width: 100%;
-      max-width: 900px;
-      background: var(--bg-card);
-      border-radius: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      padding: 18px 16px 20px;
-      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.8);
+      max-width: 1100px;
+      margin: 0 auto;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.65),
+        0 0 0 1px rgba(148, 163, 184, 0.08);
     }
 
-    @media (min-width: 768px) {
-      .app {
-        padding: 20px 22px 22px;
-      }
-    }
-
-    /* Header */
-    .header {
+    header {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 14px;
-    }
-
-    .title-row {
-      display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 10px;
-      flex-wrap: wrap;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      padding-bottom: 8px;
     }
 
-    .badge {
-      width: 34px;
-      height: 34px;
-      border-radius: 12px;
-      background: radial-gradient(circle at 20% 0, #4ade80, #22c55e, #22d3ee);
+    .title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .date-controls {
+      margin-left: auto;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      color: #020617;
-      font-size: 0.9rem;
-    }
-
-    h1 {
-      font-size: 1.1rem;
-    }
-
-    .goal {
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-
-    .goal span {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .week-summary {
-      margin-top: 4px;
-      font-size: 0.8rem;
-      color: var(--muted);
-      display: flex;
-      flex-wrap: wrap;
       gap: 6px;
-    }
-
-    .week-summary strong {
-      color: var(--accent2);
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
-      margin-bottom: 10px;
     }
 
-    .tab-btn {
-      flex: 1 0 0;
-      min-width: 0;
-      padding: 6px 0;
-      text-align: center;
+    button, select, input, textarea {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(17, 24, 39, 0.9);
+      color: var(--text);
+      padding: 6px 10px;
       font-size: 0.8rem;
+      outline: none;
+    }
+
+    button {
+      cursor: pointer;
       border-radius: 999px;
       border: 1px solid rgba(148, 163, 184, 0.4);
-      background: #020617;
-      color: var(--muted);
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.2), rgba(15, 23, 42, 0.95));
+      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.08s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4), 0 10px 20px rgba(15, 23, 42, 0.9);
+      border-color: rgba(56, 189, 248, 0.7);
+    }
+
+    button.small {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+
+    select {
+      padding-right: 24px;
       cursor: pointer;
-      transition: 0.1s ease;
     }
 
-    .tab-btn.active {
-      color: #020617;
-      background: linear-gradient(135deg, #22c55e, #22d3ee);
-      border-color: transparent;
-      font-weight: 600;
-    }
-
-    /* Main layout */
-    .grid {
+    main {
       display: grid;
-      gap: 12px;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.8fr);
+      gap: 14px;
     }
 
-    @media (min-width: 800px) {
-      .grid {
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    @media (max-width: 840px) {
+      main {
+        grid-template-columns: minmax(0, 1fr);
       }
     }
 
     .card {
-      background: #020617;
+      background: radial-gradient(circle at top, rgba(30, 64, 175, 0.55), rgba(15, 23, 42, 0.98));
       border-radius: var(--radius);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      padding: 12px 12px 14px;
+      padding: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      box-shadow:
+        0 12px 28px rgba(15, 23, 42, 0.75),
+        0 0 0 1px rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(14px);
     }
 
-    .card-title {
-      font-size: 0.9rem;
-      font-weight: 600;
+    .card h2 {
+      font-size: 0.95rem;
       margin-bottom: 6px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: baseline;
       gap: 8px;
     }
 
-    .card-sub {
-      font-size: 0.75rem;
+    .tag {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.45);
       color: var(--muted);
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
       margin-bottom: 8px;
     }
 
-    /* Form */
-    .form-grid {
-      display: grid;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    @media (min-width: 600px) {
-      .form-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
+    .row label {
+      font-size: 0.75rem;
+      color: var(--muted);
     }
 
     .field {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      font-size: 0.78rem;
+      gap: 3px;
+      flex: 1;
+      min-width: 90px;
     }
 
-    label {
-      color: var(--muted);
-    }
-
-    input[type="number"],
-    input[type="text"],
-    textarea {
-      padding: 6px 8px;
+    input[type="number"], input[type="text"], textarea {
+      width: 100%;
       border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: #020617;
-      color: var(--text);
-      font-size: 0.82rem;
-      outline: none;
-      resize: vertical;
-    }
-
-    input[type="number"],
-    input[type="text"] {
-      border-radius: 999px;
-    }
-
-    input:focus,
-    textarea:focus {
-      border-color: var(--accent2);
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
-    }
-
-    .rest-toggle {
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 6px 9px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.35);
       font-size: 0.8rem;
     }
 
-    .rest-toggle input {
-      width: 16px;
-      height: 16px;
+    textarea {
+      min-height: 70px;
+      border-radius: 14px;
+      resize: vertical;
     }
 
-    .rest-label {
-      color: var(--muted);
-    }
-
-    .exercise-list {
-      margin-top: 10px;
-      padding: 8px 10px;
-      border-radius: 12px;
+    .pill-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
       background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      font-size: 0.78rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      font-size: 0.75rem;
+      cursor: pointer;
     }
 
-    .exercise-title {
-      font-weight: 600;
-      margin-bottom: 4px;
+    .pill-toggle input {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent);
     }
 
-    .exercise-item {
+    .checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 6px;
+      max-height: 210px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .check-item {
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 4px;
+      padding: 4px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      font-size: 0.8rem;
     }
 
-    .exercise-item input {
+    .check-item input[type="checkbox"] {
       width: 14px;
       height: 14px;
+      accent-color: var(--accent);
     }
 
-    .notes-block {
-      margin-top: 8px;
-      font-size: 0.78rem;
+    .check-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .notes-block label {
-      display: block;
-      margin-bottom: 4px;
+    .check-text.done {
+      text-decoration: line-through;
+      color: var(--muted);
     }
 
-    .save-row {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border: none;
+    .delete-btn {
       border-radius: 999px;
-      padding: 7px 14px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: linear-gradient(135deg, #22c55e, #22d3ee);
-      color: #020617;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      background: rgba(248, 113, 113, 0.1);
+      border-color: rgba(248, 113, 113, 0.6);
+      color: #fecaca;
     }
 
-    .btn-secondary {
-      background: rgba(15, 23, 42, 0.9);
+    .date-label {
+      font-size: 0.85rem;
       color: var(--muted);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-    }
-
-    .note {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .note span {
-      color: var(--accent);
-    }
-
-    /* Summary list */
-    .summary-list {
-      margin-top: 8px;
-      font-size: 0.78rem;
-      border-top: 1px solid rgba(31, 41, 55, 0.8);
-      padding-top: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-height: 190px;
-      overflow-y: auto;
-    }
-
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 3px 0;
-    }
-
-    .summary-day {
-      color: var(--muted);
-    }
-
-    .summary-main {
-      font-weight: 500;
-    }
-
-    .summary-sub {
-      color: var(--muted);
-    }
-
-    .summary-rest {
-      color: var(--accent);
-      font-weight: 500;
-    }
-
-    .summary-pain-high {
-      color: var(--danger);
-    }
-
-    .summary-water {
-      color: var(--accent2);
-    }
-
-    .summary-tasks {
-      color: var(--muted);
-      font-size: 0.75rem;
-    }
-
-    .summary-notes {
-      color: var(--muted);
-      font-size: 0.75rem;
       margin-top: 2px;
     }
 
-    /* Graph */
-    .graph-container {
+    .range-summary {
       margin-top: 6px;
     }
 
-    #graph {
-      width: 100%;
-      height: 200px;
-      border-radius: 12px;
-      background: radial-gradient(circle at top, rgba(34, 197, 94, 0.08), #020617);
-      border: 1px solid rgba(31, 41, 55, 0.9);
+    .range-summary h3 {
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: var(--muted);
     }
 
-    .graph-legend {
+    .range-totals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
       font-size: 0.75rem;
+    }
+
+    .chip {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      overflow: hidden;
+      border-radius: 10px;
+    }
+
+    thead {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    th, td {
+      padding: 4px 6px;
+      text-align: left;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    tbody tr {
+      cursor: pointer;
+    }
+
+    tbody tr:hover {
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .chart-wrap {
+      margin-top: 8px;
+      padding: 8px;
+      border-radius: 14px;
+      background: radial-gradient(circle at top, var(--accent-soft), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .chart-wrap h3 {
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+
+    .hint {
+      font-size: 0.7rem;
       color: var(--muted);
       margin-top: 4px;
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .graph-legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--accent);
-    }
-
-    .dot-time {
-      background: var(--accent2);
-    }
-
-    .footer {
-      margin-top: 12px;
-      font-size: 0.72rem;
-      color: var(--muted);
-      text-align: center;
     }
   </style>
 </head>
 <body>
-  <main class="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="title-row">
-        <div class="badge">FT</div>
-        <div>
-          <h1>Weekly Fitness Tracker</h1>
-          <div class="goal">
-            Goal: <span>Run 1.5 miles in under 12:00</span>
-          </div>
-        </div>
+  <div class="app">
+    <header>
+      <div>
+        <div class="title">Fitness Tracker</div>
+        <div class="subtitle">Daily checklist • Pain • Distance &amp; Time • Water • Weight • Notes</div>
       </div>
-      <div class="week-summary" id="week-summary">
-        <!-- Filled by JS -->
+
+      <div class="date-controls">
+        <button class="small" id="prevBtn">&#x276E;</button>
+        <div class="date-label" id="periodLabel">Today</div>
+        <button class="small" id="nextBtn">&#x276F;</button>
+
+        <select id="viewSelect" title="Change view">
+          <option value="day">Day</option>
+          <option value="week">Week</option>
+          <option value="month">Month</option>
+          <option value="year">Year</option>
+        </select>
       </div>
     </header>
 
-    <!-- Day Tabs -->
-    <nav class="tabs" id="day-tabs">
-      <button class="tab-btn active" data-day="0">Mon</button>
-      <button class="tab-btn" data-day="1">Tue</button>
-      <button class="tab-btn" data-day="2">Wed</button>
-      <button class="tab-btn" data-day="3">Thu</button>
-      <button class="tab-btn" data-day="4">Fri</button>
-      <button class="tab-btn" data-day="5">Sat</button>
-      <button class="tab-btn" data-day="6">Sun</button>
-    </nav>
-
-    <!-- Main Content -->
-    <section class="grid">
-      <!-- Left: Day form -->
+    <main>
+      <!-- LEFT: Day details -->
       <section class="card">
-        <div class="card-title">
-          <span id="day-title">Monday</span>
-          <span id="rest-label" class="summary-rest" style="display:none;">Rest day taken</span>
-        </div>
-        <div class="card-sub">Log distance, time, pain, water, notes, or mark a rest day.</div>
+        <h2>
+          Today&#39;s Details
+          <span class="tag" id="dayLabel"></span>
+        </h2>
 
-        <div class="form-grid">
-          <div class="field">
-            <label for="distance">Distance (miles)</label>
-            <input id="distance" type="number" step="0.1" min="0" placeholder="e.g. 1.0" />
-          </div>
-          <div class="field">
-            <label for="time">Time (minutes)</label>
-            <input id="time" type="number" step="0.1" min="0" placeholder="e.g. 12" />
-          </div>
-          <div class="field">
-            <label for="pain">Pain (0–10)</label>
-            <input id="pain" type="number" step="1" min="0" max="10" placeholder="e.g. 3" />
-          </div>
-          <div class="field">
-            <label for="water">Water (oz)</label>
-            <input id="water" type="number" step="1" min="0" placeholder="e.g. 80" />
-          </div>
-        </div>
-
-        <div class="rest-toggle">
-          <input type="checkbox" id="rest-day" />
-          <label for="rest-day" class="rest-label">Rest day taken (no run)</label>
-        </div>
-
-        <div class="exercise-list">
-          <div class="exercise-title">Exercise checklist</div>
-          <label class="exercise-item">
-            <input type="checkbox" id="task-warmup" />
-            <span>Warm-up done</span>
-          </label>
-          <label class="exercise-item">
-            <input type="checkbox" id="task-main" />
-            <span>Run / cardio done</span>
-          </label>
-          <label class="exercise-item">
-            <input type="checkbox" id="task-strength" />
-            <span>Strength / core done</span>
+        <div class="row" style="margin-top:4px;">
+          <label class="pill-toggle">
+            <input type="checkbox" id="restDayToggle" />
+            Rest day taken
           </label>
         </div>
 
-        <div class="notes-block">
-          <label for="notes">Workout notes (exercises / sets / reps)</label>
-          <textarea id="notes" rows="3" placeholder="e.g. Squats 3×10, Push-ups 4×12, Plank 3×30s"></textarea>
+        <div class="row">
+          <div class="field">
+            <label for="distanceInput">Distance (miles)</label>
+            <input type="number" step="0.01" id="distanceInput" placeholder="e.g. 1.50" />
+          </div>
+          <div class="field">
+            <label for="timeInput">Time (minutes)</label>
+            <input type="number" step="0.1" id="timeInput" placeholder="e.g. 12.5" />
+          </div>
         </div>
 
-        <div class="save-row">
-          <button class="btn" id="save-day">Save day</button>
-          <button class="btn btn-secondary" id="clear-week">Clear week</button>
+        <div class="row">
+          <div class="field">
+            <label for="painInput">Pain (0–10)</label>
+            <input type="number" id="painInput" min="0" max="10" step="1" />
+          </div>
+          <div class="field">
+            <label for="waterInput">Water (oz)</label>
+            <input type="number" id="waterInput" step="1" />
+          </div>
+          <div class="field">
+            <label for="weightInput">Weight (lb)</label>
+            <input type="number" id="weightInput" step="0.1" />
+          </div>
         </div>
-        <div class="note">
-          Data is saved in <span>this browser only</span> using localStorage.
+
+        <div class="row">
+          <div class="field" style="flex:1 1 100%;">
+            <label for="notesInput">Notes (exercise details, reps &amp; sets, how it felt)</label>
+            <textarea id="notesInput" placeholder="Write what you did, any pain, breathing, etc."></textarea>
+          </div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid rgba(148,163,184,0.3); margin:6px 0;" />
+
+        <h2>Checklist <span class="tag">Tap to check off</span></h2>
+
+        <div class="row">
+          <div class="field">
+            <label for="newItemInput">Add checklist item</label>
+            <div class="row">
+              <input type="text" id="newItemInput" placeholder="e.g. Squats 3×5, Pushups 3×12" />
+              <button class="small" id="addItemBtn">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <ul class="checklist" id="checklist"></ul>
+
+        <div class="hint">
+          Tip: Use workout plans on the right to auto-fill this checklist for your push/pull/leg days.
         </div>
       </section>
 
-      <!-- Right: Graph + week summary -->
+      <!-- RIGHT: Range summary + plans -->
       <section class="card">
-        <div class="card-title">
-          <span>Progression Graph</span>
-        </div>
-        <div class="card-sub">Bars: distance (miles) • Line: time (minutes)</div>
+        <h2>
+          Range &amp; Plans
+          <span class="tag">Week / Month / Year</span>
+        </h2>
 
-        <div class="graph-container">
-          <canvas id="graph"></canvas>
-          <div class="graph-legend">
-            <span><span class="dot"></span> Distance (miles)</span>
-            <span><span class="dot dot-time"></span> Time (minutes)</span>
-            <span id="best-label">Best distance: 0 mi</span>
+        <!-- Range summary -->
+        <div class="range-summary" id="rangeSummarySection" style="display:none;">
+          <h3 id="rangeTitle"></h3>
+          <div class="range-totals" id="rangeTotals"></div>
+
+          <div style="max-height:170px; overflow-y:auto; border-radius:10px; border:1px solid rgba(31,41,55,0.95);">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Dist (mi)</th>
+                  <th>Time (min)</th>
+                  <th>Pain</th>
+                  <th>Wt</th>
+                  <th>Rest</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="rangeTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="chart-wrap">
+            <h3>Distance &amp; Time graph (for current range)</h3>
+            <canvas id="distanceTimeChart" height="120"></canvas>
           </div>
         </div>
 
-        <div class="card-title" style="margin-top:10px;">
-          <span>Week Overview</span>
-        </div>
-        <div class="card-sub">Quick look at all days, water, pain, rest, and notes.</div>
+        <hr style="border:none; border-top:1px solid rgba(148,163,184,0.3); margin:8px 0;" />
 
-        <div class="summary-list" id="summary-list">
-          <!-- Filled by JS -->
+        <!-- Workout plans -->
+        <div>
+          <h2>
+            Workout Plans
+            <span class="tag">Custom routines</span>
+          </h2>
+
+          <div class="row" style="margin-top:4px;">
+            <div class="field">
+              <label for="planSelect">Saved plans</label>
+              <select id="planSelect"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="small" id="applyPlanBtn">Apply to today</button>
+          </div>
+
+          <div class="row" style="margin-top:6px;">
+            <div class="field">
+              <label for="planNameInput">New / Edit plan name</label>
+              <input type="text" id="planNameInput" placeholder="e.g. Push Day A" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="planItemsInput">Exercises (one per line)</label>
+              <textarea id="planItemsInput" placeholder="Bench Press 3×5
+Incline DB Press 3×8
+Triceps Pushdown 3×12"></textarea>
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="small" id="savePlanBtn">Save / Update plan</button>
+            <button class="small" id="deletePlanBtn" style="background:rgba(248,113,113,0.1); border-color:rgba(248,113,113,0.7); color:#fecaca;">
+              Delete plan
+            </button>
+          </div>
+
+          <div class="hint">
+            Save your Push / Pull / Legs / Cardio days here. Then pick a plan and hit “Apply to today” to fill your checklist.
+          </div>
         </div>
       </section>
-    </section>
-
-    <footer class="footer">
-      Mon–Sun tabs • Rest day toggle • Pain + water + checklist + notes • Distance + time graph • PRT goal: 1.5 miles &lt; 12:00
-    </footer>
-  </main>
+    </main>
+  </div>
 
   <script>
-    (function () {
-      const STORAGE_KEY = "weekly_fitness_v3";
+    const STORAGE_KEY = "fitnessTracker_v2";
+    const PLAN_KEY = "fitnessPlans_v1";
 
-      const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-      const shortNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    let data = loadData();
+    let plans = loadPlans();
 
-      let activeDay = 0;
-      let weekData = loadWeek();
+    let currentView = "day"; // "day" | "week" | "month" | "year"
+    let anchorDate = new Date();
+    let chartInstance = null;
 
-      // Elements
-      const dayTabs = document.getElementById("day-tabs");
-      const dayTitle = document.getElementById("day-title");
-      const restLabel = document.getElementById("rest-label");
-      const distanceInput = document.getElementById("distance");
-      const timeInput = document.getElementById("time");
-      const painInput = document.getElementById("pain");
-      const waterInput = document.getElementById("water");
-      const notesInput = document.getElementById("notes");
-      const restCheckbox = document.getElementById("rest-day");
-      const saveBtn = document.getElementById("save-day");
-      const clearWeekBtn = document.getElementById("clear-week");
-      const summaryList = document.getElementById("summary-list");
-      const weekSummary = document.getElementById("week-summary");
-      const bestLabel = document.getElementById("best-label");
-      const canvas = document.getElementById("graph");
-      const ctx = canvas.getContext("2d");
+    // DOM elements
+    const periodLabel = document.getElementById("periodLabel");
+    const dayLabel = document.getElementById("dayLabel");
+    const viewSelect = document.getElementById("viewSelect");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
 
-      const taskWarmup = document.getElementById("task-warmup");
-      const taskMain = document.getElementById("task-main");
-      const taskStrength = document.getElementById("task-strength");
+    const restDayToggle = document.getElementById("restDayToggle");
+    const distanceInput = document.getElementById("distanceInput");
+    const timeInput = document.getElementById("timeInput");
+    const painInput = document.getElementById("painInput");
+    const waterInput = document.getElementById("waterInput");
+    const weightInput = document.getElementById("weightInput");
+    const notesInput = document.getElementById("notesInput");
 
-      function defaultDay() {
-        return {
-          distance: 0,
-          time: 0,
-          pain: null,
-          rest: false,
-          water: 0,
-          checklist: {
-            warmup: false,
-            main: false,
-            strength: false
-          },
-          notes: ""
+    const newItemInput = document.getElementById("newItemInput");
+    const addItemBtn = document.getElementById("addItemBtn");
+    const checklistEl = document.getElementById("checklist");
+
+    const rangeSummarySection = document.getElementById("rangeSummarySection");
+    const rangeTitle = document.getElementById("rangeTitle");
+    const rangeTotals = document.getElementById("rangeTotals");
+    const rangeTableBody = document.getElementById("rangeTableBody");
+
+    const planSelect = document.getElementById("planSelect");
+    const planNameInput = document.getElementById("planNameInput");
+    const planItemsInput = document.getElementById("planItemsInput");
+    const savePlanBtn = document.getElementById("savePlanBtn");
+    const deletePlanBtn = document.getElementById("deletePlanBtn");
+    const applyPlanBtn = document.getElementById("applyPlanBtn");
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadPlans() {
+      try {
+        const raw = localStorage.getItem(PLAN_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function savePlans() {
+      localStorage.setItem(PLAN_KEY, JSON.stringify(plans));
+    }
+
+    function formatISO(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function prettyDate(date) {
+      return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+
+    function getEntry(dateIso) {
+      if (!data[dateIso]) {
+        data[dateIso] = {
+          restDay: false,
+          distance: "",
+          time: "",
+          pain: "",
+          water: "",
+          weight: "",
+          notes: "",
+          checklist: [],
+          planId: null,
         };
       }
+      return data[dateIso];
+    }
 
-      function defaultWeek() {
-        return Array.from({ length: 7 }, () => defaultDay());
+    function getWeekRange(date) {
+      const d = new Date(date);
+      const day = d.getDay(); // 0 = Sunday
+      const start = new Date(d);
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - day);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      return { start, end };
+    }
+
+    function getMonthRange(date) {
+      const d = new Date(date);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      return { start, end };
+    }
+
+    function getYearRange(date) {
+      const d = new Date(date);
+      const start = new Date(d.getFullYear(), 0, 1);
+      const end = new Date(d.getFullYear(), 11, 31);
+      return { start, end };
+    }
+
+    function changePeriod(delta) {
+      if (currentView === "day") {
+        anchorDate.setDate(anchorDate.getDate() + delta);
+      } else if (currentView === "week") {
+        anchorDate.setDate(anchorDate.getDate() + delta * 7);
+      } else if (currentView === "month") {
+        anchorDate.setMonth(anchorDate.getMonth() + delta);
+      } else if (currentView === "year") {
+        anchorDate.setFullYear(anchorDate.getFullYear() + delta);
+      }
+      render();
+    }
+
+    function render() {
+      const todayIso = formatISO(anchorDate);
+      const entry = getEntry(todayIso);
+
+      // Header labels
+      if (currentView === "day") {
+        periodLabel.textContent = "Today";
+      } else if (currentView === "week") {
+        const { start, end } = getWeekRange(anchorDate);
+        periodLabel.textContent = `Week of ${prettyDate(start)} – ${prettyDate(end)}`;
+      } else if (currentView === "month") {
+        periodLabel.textContent = anchorDate.toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        });
+      } else if (currentView === "year") {
+        periodLabel.textContent = anchorDate.getFullYear().toString();
       }
 
-      function loadWeek() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return defaultWeek();
-          const parsed = JSON.parse(raw);
-          if (!Array.isArray(parsed) || parsed.length !== 7) return defaultWeek();
-          return parsed.map(d => {
-            const base = defaultDay();
-            if (!d || typeof d !== "object") return base;
-            return {
-              distance: Number(d.distance) || 0,
-              time: Number(d.time) || 0,
-              pain: d.pain === null || d.pain === undefined ? null : Number(d.pain),
-              rest: !!d.rest,
-              water: Number(d.water) || 0,
-              checklist: {
-                warmup: d.checklist && typeof d.checklist.warmup === "boolean" ? d.checklist.warmup : false,
-                main: d.checklist && typeof d.checklist.main === "boolean" ? d.checklist.main : false,
-                strength: d.checklist && typeof d.checklist.strength === "boolean" ? d.checklist.strength : false
-              },
-              notes: typeof d.notes === "string" ? d.notes : ""
-            };
+      dayLabel.textContent = prettyDate(anchorDate);
+
+      restDayToggle.checked = !!entry.restDay;
+      distanceInput.value = entry.distance ?? "";
+      timeInput.value = entry.time ?? "";
+      painInput.value = entry.pain ?? "";
+      waterInput.value = entry.water ?? "";
+      weightInput.value = entry.weight ?? "";
+      notesInput.value = entry.notes ?? "";
+
+      renderChecklist(entry.checklist);
+
+      if (currentView === "day") {
+        rangeSummarySection.style.display = "none";
+      } else {
+        rangeSummarySection.style.display = "block";
+        renderRangeSummary();
+      }
+
+      renderPlansSelect();
+    }
+
+    function renderChecklist(items) {
+      checklistEl.innerHTML = "";
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.className = "check-item";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = !!item.done;
+        checkbox.addEventListener("change", () => {
+          item.done = checkbox.checked;
+          saveData();
+          renderChecklist(items);
+        });
+
+        const span = document.createElement("span");
+        span.className = "check-text" + (item.done ? " done" : "");
+        span.textContent = item.text;
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "small delete-btn";
+        delBtn.textContent = "X";
+        delBtn.addEventListener("click", () => {
+          items.splice(index, 1);
+          saveData();
+          render();
+        });
+
+        li.appendChild(checkbox);
+        li.appendChild(span);
+        li.appendChild(delBtn);
+        checklistEl.appendChild(li);
+      });
+    }
+
+    function renderRangeSummary() {
+      let range;
+      if (currentView === "week") {
+        range = getWeekRange(anchorDate);
+        rangeTitle.textContent = "This week";
+      } else if (currentView === "month") {
+        range = getMonthRange(anchorDate);
+        rangeTitle.textContent = "This month";
+      } else {
+        range = getYearRange(anchorDate);
+        rangeTitle.textContent = "This year";
+      }
+
+      const { start, end } = range;
+      const rows = [];
+      let totalDistance = 0;
+      let totalTime = 0;
+      let painSum = 0;
+      let painCount = 0;
+      let weightSum = 0;
+      let weightCount = 0;
+
+      const labels = [];
+      const distanceSeries = [];
+      const timeSeries = [];
+
+      const cursor = new Date(start);
+      cursor.setHours(0, 0, 0, 0);
+
+      while (cursor <= end) {
+        const iso = formatISO(cursor);
+        const entry = data[iso];
+        if (entry) {
+          const dist = parseFloat(entry.distance || "0") || 0;
+          const t = parseFloat(entry.time || "0") || 0;
+          const pain = entry.pain === "" || entry.pain == null ? null : Number(entry.pain);
+          const weight = entry.weight === "" || entry.weight == null ? null : Number(entry.weight);
+
+          totalDistance += dist;
+          totalTime += t;
+
+          if (pain !== null && !Number.isNaN(pain)) {
+            painSum += pain;
+            painCount++;
+          }
+          if (weight !== null && !Number.isNaN(weight)) {
+            weightSum += weight;
+            weightCount++;
+          }
+
+          labels.push(cursor.toLocaleDateString(undefined, { month: "short", day: "numeric" }));
+          distanceSeries.push(dist || null);
+          timeSeries.push(t || null);
+
+          rows.push({
+            iso,
+            dateStr: cursor.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+            dist,
+            t,
+            pain,
+            weight,
+            rest: entry.restDay ? "Yes" : "",
+            note: entry.notes ? (entry.notes.length > 20 ? entry.notes.slice(0, 20) + "…" : entry.notes) : "",
           });
-        } catch (e) {
-          return defaultWeek();
         }
+        cursor.setDate(cursor.getDate() + 1);
       }
 
-      function saveWeek() {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(weekData));
-        } catch (e) {
-          console.warn("Failed to save week data", e);
-        }
+      // Totals
+      rangeTotals.innerHTML = "";
+      const chips = [];
+
+      chips.push(`Total distance: ${totalDistance.toFixed(2)} mi`);
+      chips.push(`Total time: ${totalTime.toFixed(1)} min`);
+
+      if (painCount > 0) {
+        chips.push(`Avg pain: ${(painSum / painCount).toFixed(1)}`);
+      }
+      if (weightCount > 0) {
+        chips.push(`Avg weight: ${(weightSum / weightCount).toFixed(1)} lb`);
       }
 
-      function setActiveDay(index) {
-        activeDay = index;
-        const tabs = dayTabs.querySelectorAll(".tab-btn");
-        tabs.forEach(btn => {
-          const d = Number(btn.getAttribute("data-day"));
-          btn.classList.toggle("active", d === activeDay);
-        });
-        renderDayForm();
-      }
+      chips.forEach(text => {
+        const span = document.createElement("span");
+        span.className = "chip";
+        span.textContent = text;
+        rangeTotals.appendChild(span);
+      });
 
-      function renderDayForm() {
-        const data = weekData[activeDay];
-        dayTitle.textContent = dayNames[activeDay];
-        restCheckbox.checked = data.rest;
-        restLabel.style.display = data.rest ? "inline" : "none";
-
-        if (data.rest) {
-          distanceInput.value = "";
-          timeInput.value = "";
-          painInput.value = "";
-          waterInput.value = "";
-          notesInput.value = "";
-          taskWarmup.checked = false;
-          taskMain.checked = false;
-          taskStrength.checked = false;
-
-          distanceInput.disabled = true;
-          timeInput.disabled = true;
-          painInput.disabled = true;
-          waterInput.disabled = true;
-          notesInput.disabled = true;
-          taskWarmup.disabled = true;
-          taskMain.disabled = true;
-          taskStrength.disabled = true;
-        } else {
-          distanceInput.disabled = false;
-          timeInput.disabled = false;
-          painInput.disabled = false;
-          waterInput.disabled = false;
-          notesInput.disabled = false;
-          taskWarmup.disabled = false;
-          taskMain.disabled = false;
-          taskStrength.disabled = false;
-
-          distanceInput.value = data.distance || "";
-          timeInput.value = data.time || "";
-          painInput.value = data.pain === null ? "" : data.pain;
-          waterInput.value = data.water || "";
-          notesInput.value = data.notes || "";
-
-          taskWarmup.checked = !!data.checklist.warmup;
-          taskMain.checked = !!data.checklist.main;
-          taskStrength.checked = !!data.checklist.strength;
-        }
-      }
-
-      function renderSummary() {
-        summaryList.innerHTML = "";
-        let totalDistance = 0;
-        let totalTime = 0;
-        let restDays = 0;
-        let bestDistance = 0;
-        let totalWater = 0;
-
-        weekData.forEach((d, idx) => {
-          if (d.rest) restDays++;
-          totalDistance += d.distance;
-          totalTime += d.time;
-          totalWater += d.water;
-          if (d.distance > bestDistance) bestDistance = d.distance;
-
-          const item = document.createElement("div");
-          item.className = "summary-item";
-
-          const left = document.createElement("div");
-          const right = document.createElement("div");
-
-          const daySpan = document.createElement("div");
-          daySpan.className = "summary-day";
-          daySpan.textContent = shortNames[idx];
-
-          const mainSpan = document.createElement("div");
-          if (d.rest) {
-            mainSpan.className = "summary-rest";
-            mainSpan.textContent = "Rest day";
-          } else if (d.distance > 0 || d.time > 0) {
-            mainSpan.className = "summary-main";
-            mainSpan.textContent = `${d.distance || 0} mi • ${d.time || 0} min`;
-          } else {
-            mainSpan.className = "summary-sub";
-            mainSpan.textContent = "No entry";
-          }
-
-          left.appendChild(daySpan);
-          left.appendChild(mainSpan);
-
-          const waterSpan = document.createElement("div");
-          waterSpan.className = "summary-water";
-          if (d.water > 0) {
-            waterSpan.textContent = `${d.water} oz water`;
-          } else {
-            waterSpan.textContent = "";
-          }
-
-          const painSpan = document.createElement("div");
-          if (d.pain !== null && !isNaN(d.pain)) {
-            painSpan.textContent = `Pain: ${d.pain}/10`;
-            if (d.pain >= 5) painSpan.className = "summary-pain-high";
-            else painSpan.className = "summary-sub";
-          } else {
-            painSpan.className = "summary-sub";
-            painSpan.textContent = "";
-          }
-
-          const tasksDone =
-            (d.checklist.warmup ? 1 : 0) +
-            (d.checklist.main ? 1 : 0) +
-            (d.checklist.strength ? 1 : 0);
-          const tasksSpan = document.createElement("div");
-          tasksSpan.className = "summary-tasks";
-          if (tasksDone > 0) {
-            tasksSpan.textContent = `Checklist: ${tasksDone}/3 done`;
-          } else {
-            tasksSpan.textContent = "";
-          }
-
-          const notesSpan = document.createElement("div");
-          notesSpan.className = "summary-notes";
-          if (d.notes && d.notes.trim() !== "") {
-            const maxLen = 40;
-            const txt = d.notes.trim();
-            notesSpan.textContent =
-              txt.length > maxLen ? `Notes: ${txt.slice(0, maxLen)}…` : `Notes: ${txt}`;
-          } else {
-            notesSpan.textContent = "";
-          }
-
-          right.appendChild(waterSpan);
-          right.appendChild(painSpan);
-          right.appendChild(tasksSpan);
-          right.appendChild(notesSpan);
-
-          item.appendChild(left);
-          item.appendChild(right);
-          summaryList.appendChild(item);
-        });
-
-        const avgDistance = totalDistance / 7;
-        weekSummary.innerHTML = `
-          <span>Total distance: <strong>${totalDistance.toFixed(1)} mi</strong></span>
-          <span>Avg per day: <strong>${avgDistance.toFixed(1)} mi</strong></span>
-          <span>Rest days: <strong>${restDays}</strong></span>
-          <span>Total water: <strong>${totalWater.toFixed(0)} oz</strong></span>
+      // Table
+      rangeTableBody.innerHTML = "";
+      rows.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.dataset.iso = row.iso;
+        tr.innerHTML = `
+          <td>${row.dateStr}</td>
+          <td>${row.dist ? row.dist.toFixed(2) : ""}</td>
+          <td>${row.t ? row.t.toFixed(1) : ""}</td>
+          <td>${row.pain ?? ""}</td>
+          <td>${row.weight ?? ""}</td>
+          <td>${row.rest}</td>
+          <td>${row.note}</td>
         `;
-
-        bestLabel.textContent = `Best distance: ${bestDistance.toFixed(1)} mi`;
-      }
-
-      function renderGraph() {
-        const width = canvas.clientWidth || 300;
-        const height = canvas.clientHeight || 200;
-        const dpr = window.devicePixelRatio || 1;
-
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        ctx.clearRect(0, 0, width, height);
-
-        // Background
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(0, 0, width, height);
-
-        // Grid lines
-        ctx.strokeStyle = "rgba(148,163,184,0.4)";
-        ctx.lineWidth = 1;
-        const gridLines = 4;
-        for (let i = 1; i <= gridLines; i++) {
-          const y = (height / (gridLines + 1)) * i;
-          ctx.beginPath();
-          ctx.moveTo(24, y);
-          ctx.lineTo(width - 10, y);
-          ctx.stroke();
-        }
-
-        const paddingLeft = 32;
-        const paddingBottom = 24;
-        const chartHeight = height - paddingBottom - 10;
-        const chartWidth = width - paddingLeft - 10;
-
-        // Axes
-        ctx.strokeStyle = "rgba(148,163,184,0.7)";
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(paddingLeft, 10);
-        ctx.lineTo(paddingLeft, height - paddingBottom);
-        ctx.lineTo(width - 10, height - paddingBottom);
-        ctx.stroke();
-
-        // Data arrays
-        const distances = weekData.map(d => d.rest ? 0 : d.distance || 0);
-        const times = weekData.map(d => d.rest ? 0 : d.time || 0);
-
-        const maxDistance = Math.max(...distances, 1);
-        const maxTime = Math.max(...times, 1);
-
-        const barWidth = chartWidth / (distances.length * 1.6);
-        const gap = barWidth * 0.6;
-
-        const timePoints = [];
-
-        // Bars (distance) + time points
-        distances.forEach((dist, idx) => {
-          const x = paddingLeft + gap + idx * (barWidth + gap);
-          const distHeight = (dist / maxDistance) * (chartHeight - 10);
-          const y = height - paddingBottom - distHeight;
-
-          // Distance bar
-          const gradient = ctx.createLinearGradient(x, y, x, height - paddingBottom);
-          gradient.addColorStop(0, "#22c55e");
-          gradient.addColorStop(1, "#0f766e");
-
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.roundRect(x, y, barWidth, distHeight, 6);
-          ctx.fill();
-
-          const centerX = x + barWidth / 2;
-
-          const timeVal = times[idx];
-          const timeHeight = (timeVal / maxTime) * (chartHeight - 10);
-          const timeY = height - paddingBottom - timeHeight;
-
-          timePoints.push({ x: centerX, y: timeY });
-
-          // Day label
-          ctx.fillStyle = "rgba(148,163,184,0.9)";
-          ctx.font = "10px system-ui";
-          ctx.textAlign = "center";
-          ctx.fillText(shortNames[idx], centerX, height - paddingBottom + 12);
+        tr.addEventListener("click", () => {
+          anchorDate = new Date(row.iso);
+          currentView = "day";
+          viewSelect.value = "day";
+          render();
         });
+        rangeTableBody.appendChild(tr);
+      });
 
-        // Time line
-        ctx.strokeStyle = "#38bdf8";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        timePoints.forEach((pt, idx) => {
-          if (idx === 0) ctx.moveTo(pt.x, pt.y);
-          else ctx.lineTo(pt.x, pt.y);
-        });
-        ctx.stroke();
+      // Chart
+      updateChart(labels, distanceSeries, timeSeries);
+    }
 
-        // Time dots
-        ctx.fillStyle = "#38bdf8";
-        timePoints.forEach(pt => {
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-        });
+    function updateChart(labels, distanceData, timeData) {
+      const canvas = document.getElementById("distanceTimeChart");
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+
+      if (chartInstance) {
+        chartInstance.destroy();
       }
 
-      function saveCurrentDay() {
-        const distVal = distanceInput.value.trim();
-        const timeVal = timeInput.value.trim();
-        const painVal = painInput.value.trim();
-        const waterVal = waterInput.value.trim();
-        const notesVal = notesInput.value.trim();
-        const isRest = restCheckbox.checked;
+      chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Distance (mi)",
+              data: distanceData,
+              yAxisID: "y1",
+              tension: 0.3,
+              borderWidth: 2,
+              pointRadius: 3,
+            },
+            {
+              label: "Time (min)",
+              data: timeData,
+              yAxisID: "y2",
+              tension: 0.3,
+              borderWidth: 2,
+              pointRadius: 3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#e5e7eb",
+                font: { size: 11 },
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: "#9ca3af", font: { size: 10 } },
+              grid: { color: "rgba(55,65,81,0.6)" },
+            },
+            y1: {
+              position: "left",
+              ticks: { color: "#a5b4fc", font: { size: 10 } },
+              grid: { color: "rgba(55,65,81,0.6)" },
+            },
+            y2: {
+              position: "right",
+              ticks: { color: "#22d3ee", font: { size: 10 } },
+              grid: { drawOnChartArea: false },
+            },
+          },
+        },
+      });
+    }
 
-        const data = weekData[activeDay];
+    function renderPlansSelect() {
+      planSelect.innerHTML = "";
+      if (plans.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "No plans saved yet";
+        planSelect.appendChild(opt);
+        return;
+      }
 
-        data.rest = isRest;
+      plans.forEach(plan => {
+        const opt = document.createElement("option");
+        opt.value = plan.id;
+        opt.textContent = plan.name;
+        planSelect.appendChild(opt);
+      });
 
-        if (isRest) {
-          data.distance = 0;
-          data.time = 0;
-          data.pain = null;
-          data.water = 0;
-          data.checklist = { warmup: false, main: false, strength: false };
-          data.notes = "";
-        } else {
-          data.distance = distVal === "" ? 0 : Math.max(0, Number(distVal));
-          data.time = timeVal === "" ? 0 : Math.max(0, Number(timeVal));
-          data.pain = painVal === "" ? null : Math.min(10, Math.max(0, Number(painVal)));
-          data.water = waterVal === "" ? 0 : Math.max(0, Number(waterVal));
-          data.checklist = {
-            warmup: taskWarmup.checked,
-            main: taskMain.checked,
-            strength: taskStrength.checked
-          };
-          data.notes = notesVal;
+      const todayIso = formatISO(anchorDate);
+      const entry = getEntry(todayIso);
+      if (entry.planId) {
+        planSelect.value = entry.planId;
+      }
+    }
+
+    function loadPlanIntoEditor(planId) {
+      const plan = plans.find(p => p.id === planId);
+      if (!plan) {
+        planNameInput.value = "";
+        planItemsInput.value = "";
+        return;
+      }
+      planNameInput.value = plan.name;
+      planItemsInput.value = (plan.items || []).join("\n");
+    }
+
+    // Event listeners
+    prevBtn.addEventListener("click", () => changePeriod(-1));
+    nextBtn.addEventListener("click", () => changePeriod(1));
+
+    viewSelect.addEventListener("change", () => {
+      currentView = viewSelect.value;
+      render();
+    });
+
+    restDayToggle.addEventListener("change", () => {
+      const iso = formatISO(anchorDate);
+      const entry = getEntry(iso);
+      entry.restDay = restDayToggle.checked;
+      saveData();
+    });
+
+    function attachInputSaver(inputEl, key) {
+      inputEl.addEventListener("change", () => {
+        const iso = formatISO(anchorDate);
+        const entry = getEntry(iso);
+        entry[key] = inputEl.value;
+        saveData();
+      });
+    }
+
+    attachInputSaver(distanceInput, "distance");
+    attachInputSaver(timeInput, "time");
+    attachInputSaver(painInput, "pain");
+    attachInputSaver(waterInput, "water");
+    attachInputSaver(weightInput, "weight");
+    attachInputSaver(notesInput, "notes");
+
+    addItemBtn.addEventListener("click", () => {
+      const text = newItemInput.value.trim();
+      if (!text) return;
+      const iso = formatISO(anchorDate);
+      const entry = getEntry(iso);
+      entry.checklist.push({ text, done: false });
+      newItemInput.value = "";
+      saveData();
+      renderChecklist(entry.checklist);
+    });
+
+    newItemInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addItemBtn.click();
+      }
+    });
+
+    planSelect.addEventListener("change", () => {
+      const planId = planSelect.value;
+      loadPlanIntoEditor(planId);
+    });
+
+    savePlanBtn.addEventListener("click", () => {
+      const name = planNameInput.value.trim();
+      const rawItems = planItemsInput.value.split("\n").map(s => s.trim()).filter(Boolean);
+      if (!name || rawItems.length === 0) {
+        alert("Give the plan a name and at least one exercise.");
+        return;
+      }
+
+      let existing = plans.find(p => p.id === name.toLowerCase().replace(/\s+/g, "-"));
+      const id = existing ? existing.id : name.toLowerCase().replace(/\s+/g, "-");
+
+      if (existing) {
+        existing.name = name;
+        existing.items = rawItems;
+      } else {
+        existing = { id, name, items: rawItems };
+        plans.push(existing);
+      }
+
+      savePlans();
+      renderPlansSelect();
+      planSelect.value = existing.id;
+      const iso = formatISO(anchorDate);
+      const entry = getEntry(iso);
+      entry.planId = existing.id;
+      saveData();
+      alert("Plan saved.");
+    });
+
+    deletePlanBtn.addEventListener("click", () => {
+      const selectedId = planSelect.value;
+      if (!selectedId) return;
+      if (!confirm("Delete this plan?")) return;
+
+      plans = plans.filter(p => p.id !== selectedId);
+      savePlans();
+
+      Object.values(data).forEach(entry => {
+        if (entry.planId === selectedId) {
+          entry.planId = null;
         }
+      });
+      saveData();
 
-        weekData[activeDay] = data;
-        saveWeek();
-        renderDayForm();
-        renderSummary();
-        renderGraph();
+      planNameInput.value = "";
+      planItemsInput.value = "";
+      renderPlansSelect();
+      alert("Plan deleted.");
+    });
+
+    applyPlanBtn.addEventListener("click", () => {
+      const planId = planSelect.value;
+      const plan = plans.find(p => p.id === planId);
+      if (!plan) {
+        alert("No plan selected.");
+        return;
       }
 
-      function clearWeek() {
-        if (!confirm("Clear all data for this week?")) return;
-        weekData = defaultWeek();
-        saveWeek();
-        renderDayForm();
-        renderSummary();
-        renderGraph();
-      }
+      const iso = formatISO(anchorDate);
+      const entry = getEntry(iso);
+      entry.planId = plan.id;
+      entry.checklist = plan.items.map(text => ({ text, done: false }));
+      saveData();
+      renderChecklist(entry.checklist);
+      alert("Plan applied to today.");
+    });
 
-      // Event listeners
-      dayTabs.addEventListener("click", (e) => {
-        const btn = e.target.closest(".tab-btn");
-        if (!btn) return;
-        saveCurrentDay(); // save current before switching
-        const d = Number(btn.getAttribute("data-day"));
-        setActiveDay(d);
-      });
-
-      restCheckbox.addEventListener("change", () => {
-        const isRest = restCheckbox.checked;
-        if (isRest) {
-          distanceInput.value = "";
-          timeInput.value = "";
-          painInput.value = "";
-          waterInput.value = "";
-          notesInput.value = "";
-          taskWarmup.checked = false;
-          taskMain.checked = false;
-          taskStrength.checked = false;
-        }
-        saveCurrentDay();
-      });
-
-      saveBtn.addEventListener("click", () => {
-        saveCurrentDay();
-      });
-
-      clearWeekBtn.addEventListener("click", () => {
-        clearWeek();
-      });
-
-      // Initial render
-      setActiveDay(0);
-      renderSummary();
-      renderGraph();
-
-      window.addEventListener("resize", () => {
-        renderGraph();
-      });
-    })();
+    // Initial render
+    render();
   </script>
 </body>
 </html>
