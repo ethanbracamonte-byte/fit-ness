@@ -334,7 +334,7 @@
     <header>
       <div>
         <div class="title">Fitness Tracker</div>
-        <div class="subtitle">Daily checklist • Pain • Distance &amp; Time • Water • Weight • Notes</div>
+        <div class="subtitle">Auto-filled weekly plan • Checklists • Pain • Distance • Time • Water • Weight • Notes</div>
       </div>
 
       <div class="date-controls">
@@ -356,7 +356,7 @@
       <section class="card">
         <h2>
           Today&#39;s Details
-          <span class="tag" id="dayLabel"></span>
+          <span class="tag" id="dayPlanLabel">Plan: —</span>
         </h2>
 
         <div class="row" style="margin-top:4px;">
@@ -401,13 +401,13 @@
 
         <hr style="border:none; border-top:1px solid rgba(148,163,184,0.3); margin:6px 0;" />
 
-        <h2>Checklist <span class="tag">Tap to check off</span></h2>
+        <h2>Checklist <span class="tag">Auto-filled by day</span></h2>
 
         <div class="row">
           <div class="field">
             <label for="newItemInput">Add checklist item</label>
             <div class="row">
-              <input type="text" id="newItemInput" placeholder="e.g. Squats 3×5, Pushups 3×12" />
+              <input type="text" id="newItemInput" placeholder="Add or tweak today's plan..." />
               <button class="small" id="addItemBtn">Add</button>
             </div>
           </div>
@@ -416,18 +416,17 @@
         <ul class="checklist" id="checklist"></ul>
 
         <div class="hint">
-          Tip: Use workout plans on the right to auto-fill this checklist for your push/pull/leg days.
+          Each day is pre-loaded with the strength + PRT plan. You can still edit, add, or remove items and they’ll be saved.
         </div>
       </section>
 
-      <!-- RIGHT: Range summary + plans -->
+      <!-- RIGHT: Range summary -->
       <section class="card">
         <h2>
-          Range &amp; Plans
+          Range Overview
           <span class="tag">Week / Month / Year</span>
         </h2>
 
-        <!-- Range summary -->
         <div class="range-summary" id="rangeSummarySection" style="display:none;">
           <h3 id="rangeTitle"></h3>
           <div class="range-totals" id="rangeTotals"></div>
@@ -455,98 +454,119 @@
           </div>
         </div>
 
-        <hr style="border:none; border-top:1px solid rgba(148,163,184,0.3); margin:8px 0;" />
-
-        <!-- Workout plans -->
-        <div>
-          <h2>
-            Workout Plans
-            <span class="tag">Custom routines</span>
-          </h2>
-
-          <div class="row" style="margin-top:4px;">
-            <div class="field">
-              <label for="planSelect">Saved plans</label>
-              <select id="planSelect"></select>
-            </div>
-          </div>
-
-          <div class="row">
-            <button class="small" id="applyPlanBtn">Apply to today</button>
-          </div>
-
-          <div class="row" style="margin-top:6px;">
-            <div class="field">
-              <label for="planNameInput">New / Edit plan name</label>
-              <input type="text" id="planNameInput" placeholder="e.g. Push Day A" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label for="planItemsInput">Exercises (one per line)</label>
-              <textarea id="planItemsInput" placeholder="Bench Press 3×5
-Incline DB Press 3×8
-Triceps Pushdown 3×12"></textarea>
-            </div>
-          </div>
-
-          <div class="row">
-            <button class="small" id="savePlanBtn">Save / Update plan</button>
-            <button class="small" id="deletePlanBtn" style="background:rgba(248,113,113,0.1); border-color:rgba(248,113,113,0.7); color:#fecaca;">
-              Delete plan
-            </button>
-          </div>
-
-          <div class="hint">
-            Save your Push / Pull / Legs / Cardio days here. Then pick a plan and hit “Apply to today” to fill your checklist.
-          </div>
+        <div class="hint">
+          Tap any row in the table to jump to that day. Switch the view (Day / Week / Month / Year) at the top.
         </div>
       </section>
     </main>
   </div>
 
   <script>
-    const STORAGE_KEY = "fitnessTracker_v2";
-    const PLAN_KEY = "fitnessPlans_v1";
+    const STORAGE_KEY = "fitnessTracker_v3";
 
-    let data = loadData();
-    let plans = loadPlans();
-
-    let currentView = "day"; // "day" | "week" | "month" | "year"
-    let anchorDate = new Date();
-    let chartInstance = null;
-
-    // DOM elements
-    const periodLabel = document.getElementById("periodLabel");
-    const dayLabel = document.getElementById("dayLabel");
-    const viewSelect = document.getElementById("viewSelect");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
-
-    const restDayToggle = document.getElementById("restDayToggle");
-    const distanceInput = document.getElementById("distanceInput");
-    const timeInput = document.getElementById("timeInput");
-    const painInput = document.getElementById("painInput");
-    const waterInput = document.getElementById("waterInput");
-    const weightInput = document.getElementById("weightInput");
-    const notesInput = document.getElementById("notesInput");
-
-    const newItemInput = document.getElementById("newItemInput");
-    const addItemBtn = document.getElementById("addItemBtn");
-    const checklistEl = document.getElementById("checklist");
-
-    const rangeSummarySection = document.getElementById("rangeSummarySection");
-    const rangeTitle = document.getElementById("rangeTitle");
-    const rangeTotals = document.getElementById("rangeTotals");
-    const rangeTableBody = document.getElementById("rangeTableBody");
-
-    const planSelect = document.getElementById("planSelect");
-    const planNameInput = document.getElementById("planNameInput");
-    const planItemsInput = document.getElementById("planItemsInput");
-    const savePlanBtn = document.getElementById("savePlanBtn");
-    const deletePlanBtn = document.getElementById("deletePlanBtn");
-    const applyPlanBtn = document.getElementById("applyPlanBtn");
+    // Weekly template: 0=Sun, 1=Mon, ... 6=Sat
+    // These are the full checklists based on your strength + PRT plan.
+    const WEEK_TEMPLATES = {
+      1: { // Monday – Max Strength A (Squat + Bench)
+        name: "Max Strength A – Squat & Bench",
+        restDay: false,
+        items: [
+          "Warm-up: 5–10 min easy walk/bike",
+          "Dynamic warm-up: leg swings, hip circles, arm circles (5 min)",
+          "Back Squat – 3×5 heavy (full depth, controlled)",
+          "Bench Press – 3×5 heavy",
+          "Barbell Row – 3×5",
+          "Walking Lunges – 3×8 each leg",
+          "Plank – 3×30–45 sec",
+          "Cool-down walk – 5–10 min",
+          "Lower body stretching 5–10 min"
+        ]
+      },
+      2: { // Tuesday – Easy Run + Core
+        name: "Easy Conditioning – Run + Core",
+        restDay: false,
+        items: [
+          "Warm-up: 5–10 min easy walk",
+          "Easy run/jog – 15–25 min (conversational pace)",
+          "Walk to cool down – 5–10 min",
+          "Core: Plank – 3×30 sec",
+          "Core: Dead bug – 3×8 each side",
+          "Shin-friendly calf/ankle mobility – 5 min",
+          "Light stretching 5–10 min",
+          "Log shin pain (0–10)"
+        ]
+      },
+      3: { // Wednesday – Max Strength B (Deadlift + Press)
+        name: "Max Strength B – Deadlift & Press",
+        restDay: false,
+        items: [
+          "Warm-up: 5–10 min easy bike/row",
+          "Dynamic warm-up: hips + shoulders (5 min)",
+          "Deadlift – 3×5 (reset each rep, tight form)",
+          "Overhead Press – 3×5",
+          "Pull-ups or Lat Pulldown – 3×8",
+          "Romanian Deadlift – 3×8",
+          "Hanging Leg Raise or Reverse Crunch – 3×10–15",
+          "Cool-down walk – 5–10 min",
+          "Hamstring + hip stretch – 5–10 min"
+        ]
+      },
+      4: { // Thursday – PRT Run Focus
+        name: "PRT Run – 1.5 Mile Focus",
+        restDay: false,
+        items: [
+          "Warm-up walk – 5 min",
+          "Dynamic warm-up: leg swings, butt kicks, high knees – 5 min",
+          "Easy jog – 5–10 min",
+          "Main: 1.5 mile run at strong but controlled pace OR",
+          "Main (alt): 3×800m faster intervals (2–3 min easy walk between)",
+          "4×20–30 sec strides (fast but smooth, full recovery)",
+          "Cool-down walk – 5–10 min",
+          "Light stretching – calves, hamstrings, quads, hips",
+          "Log time, pacing and shin pain (0–10)"
+        ]
+      },
+      5: { // Friday – Full-Body Strength (lighter)
+        name: "Full-Body Strength (Moderate)",
+        restDay: false,
+        items: [
+          "Warm-up: 5–10 min easy cardio",
+          "Goblet Squat – 3×8",
+          "Incline Dumbbell Bench – 3×8–10",
+          "One-arm Dumbbell Row – 3×8 each side",
+          "Romanian Deadlift – 3×8",
+          "Dumbbell Shoulder Press – 3×8–10",
+          "Core: Side plank – 3×20–30 sec each side",
+          "Cool-down walk – 5–10 min",
+          "Stretch tight areas 5–10 min"
+        ]
+      },
+      6: { // Saturday – Easy/Long Run or Conditioning
+        name: "Easy / Long Run + Mobility",
+        restDay: false,
+        items: [
+          "Warm-up walk – 5–10 min",
+          "Easy run/jog or brisk walk – 20–30+ min (no all-out effort)",
+          "Cool-down walk – 5–10 min",
+          "Shin + calf mobility – 5–10 min",
+          "Foam roll quads, calves, glutes – 5–10 min",
+          "Stretch hamstrings, hips, ankles",
+          "Log distance, time and pain (0–10)"
+        ]
+      },
+      0: { // Sunday – Rest / Recovery
+        name: "Rest & Recovery",
+        restDay: true,
+        items: [
+          "Full rest from heavy lifting and hard running",
+          "Optional: 10–20 min easy walk",
+          "5–10 min light stretching or yoga",
+          "Hydration on point (hit water goal)",
+          "Plan next week’s sessions",
+          "Check soreness and shin pain (0–10)"
+        ]
+      }
+    };
 
     function loadData() {
       try {
@@ -559,20 +579,6 @@ Triceps Pushdown 3×12"></textarea>
 
     function saveData() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function loadPlans() {
-      try {
-        const raw = localStorage.getItem(PLAN_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    }
-
-    function savePlans() {
-      localStorage.setItem(PLAN_KEY, JSON.stringify(plans));
     }
 
     function formatISO(date) {
@@ -588,9 +594,11 @@ Triceps Pushdown 3×12"></textarea>
       });
     }
 
-    function getEntry(dateIso) {
-      if (!data[dateIso]) {
-        data[dateIso] = {
+    // Create or load entry AND auto-apply weekly template if checklist is empty
+    function getEntryForDate(date) {
+      const iso = formatISO(date);
+      if (!data[iso]) {
+        data[iso] = {
           restDay: false,
           distance: "",
           time: "",
@@ -599,10 +607,25 @@ Triceps Pushdown 3×12"></textarea>
           weight: "",
           notes: "",
           checklist: [],
-          planId: null,
+          planName: "",
+          manualEditedChecklist: false
         };
       }
-      return data[dateIso];
+      const entry = data[iso];
+
+      // If user hasn't edited checklist yet and it's empty, use weekly template
+      if (!entry.manualEditedChecklist && (!entry.checklist || entry.checklist.length === 0)) {
+        const weekday = date.getDay(); // 0=Sun
+        const template = WEEK_TEMPLATES[weekday];
+        if (template) {
+          entry.restDay = template.restDay;
+          entry.planName = template.name;
+          entry.checklist = template.items.map(text => ({ text, done: false }));
+          saveData();
+        }
+      }
+
+      return entry;
     }
 
     function getWeekRange(date) {
@@ -630,6 +653,35 @@ Triceps Pushdown 3×12"></textarea>
       return { start, end };
     }
 
+    let data = loadData();
+    let currentView = "day";
+    let anchorDate = new Date();
+    let chartInstance = null;
+
+    // DOM elements
+    const periodLabel = document.getElementById("periodLabel");
+    const dayPlanLabel = document.getElementById("dayPlanLabel");
+    const viewSelect = document.getElementById("viewSelect");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const restDayToggle = document.getElementById("restDayToggle");
+    const distanceInput = document.getElementById("distanceInput");
+    const timeInput = document.getElementById("timeInput");
+    const painInput = document.getElementById("painInput");
+    const waterInput = document.getElementById("waterInput");
+    const weightInput = document.getElementById("weightInput");
+    const notesInput = document.getElementById("notesInput");
+
+    const newItemInput = document.getElementById("newItemInput");
+    const addItemBtn = document.getElementById("addItemBtn");
+    const checklistEl = document.getElementById("checklist");
+
+    const rangeSummarySection = document.getElementById("rangeSummarySection");
+    const rangeTitle = document.getElementById("rangeTitle");
+    const rangeTotals = document.getElementById("rangeTotals");
+    const rangeTableBody = document.getElementById("rangeTableBody");
+
     function changePeriod(delta) {
       if (currentView === "day") {
         anchorDate.setDate(anchorDate.getDate() + delta);
@@ -644,12 +696,10 @@ Triceps Pushdown 3×12"></textarea>
     }
 
     function render() {
-      const todayIso = formatISO(anchorDate);
-      const entry = getEntry(todayIso);
+      const entry = getEntryForDate(anchorDate);
 
-      // Header labels
       if (currentView === "day") {
-        periodLabel.textContent = "Today";
+        periodLabel.textContent = "Today · " + prettyDate(anchorDate);
       } else if (currentView === "week") {
         const { start, end } = getWeekRange(anchorDate);
         periodLabel.textContent = `Week of ${prettyDate(start)} – ${prettyDate(end)}`;
@@ -662,7 +712,7 @@ Triceps Pushdown 3×12"></textarea>
         periodLabel.textContent = anchorDate.getFullYear().toString();
       }
 
-      dayLabel.textContent = prettyDate(anchorDate);
+      dayPlanLabel.textContent = "Plan: " + (entry.planName || "—");
 
       restDayToggle.checked = !!entry.restDay;
       distanceInput.value = entry.distance ?? "";
@@ -680,8 +730,6 @@ Triceps Pushdown 3×12"></textarea>
         rangeSummarySection.style.display = "block";
         renderRangeSummary();
       }
-
-      renderPlansSelect();
     }
 
     function renderChecklist(items) {
@@ -708,6 +756,9 @@ Triceps Pushdown 3×12"></textarea>
         delBtn.textContent = "X";
         delBtn.addEventListener("click", () => {
           items.splice(index, 1);
+          const iso = formatISO(anchorDate);
+          const entry = data[iso];
+          if (entry) entry.manualEditedChecklist = true;
           saveData();
           render();
         });
@@ -787,7 +838,6 @@ Triceps Pushdown 3×12"></textarea>
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      // Totals
       rangeTotals.innerHTML = "";
       const chips = [];
 
@@ -808,7 +858,6 @@ Triceps Pushdown 3×12"></textarea>
         rangeTotals.appendChild(span);
       });
 
-      // Table
       rangeTableBody.innerHTML = "";
       rows.forEach(row => {
         const tr = document.createElement("tr");
@@ -831,7 +880,6 @@ Triceps Pushdown 3×12"></textarea>
         rangeTableBody.appendChild(tr);
       });
 
-      // Chart
       updateChart(labels, distanceSeries, timeSeries);
     }
 
@@ -903,42 +951,7 @@ Triceps Pushdown 3×12"></textarea>
       });
     }
 
-    function renderPlansSelect() {
-      planSelect.innerHTML = "";
-      if (plans.length === 0) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "No plans saved yet";
-        planSelect.appendChild(opt);
-        return;
-      }
-
-      plans.forEach(plan => {
-        const opt = document.createElement("option");
-        opt.value = plan.id;
-        opt.textContent = plan.name;
-        planSelect.appendChild(opt);
-      });
-
-      const todayIso = formatISO(anchorDate);
-      const entry = getEntry(todayIso);
-      if (entry.planId) {
-        planSelect.value = entry.planId;
-      }
-    }
-
-    function loadPlanIntoEditor(planId) {
-      const plan = plans.find(p => p.id === planId);
-      if (!plan) {
-        planNameInput.value = "";
-        planItemsInput.value = "";
-        return;
-      }
-      planNameInput.value = plan.name;
-      planItemsInput.value = (plan.items || []).join("\n");
-    }
-
-    // Event listeners
+    // ---- event wiring ----
     prevBtn.addEventListener("click", () => changePeriod(-1));
     nextBtn.addEventListener("click", () => changePeriod(1));
 
@@ -949,7 +962,7 @@ Triceps Pushdown 3×12"></textarea>
 
     restDayToggle.addEventListener("change", () => {
       const iso = formatISO(anchorDate);
-      const entry = getEntry(iso);
+      const entry = data[iso] || getEntryForDate(anchorDate);
       entry.restDay = restDayToggle.checked;
       saveData();
     });
@@ -957,7 +970,7 @@ Triceps Pushdown 3×12"></textarea>
     function attachInputSaver(inputEl, key) {
       inputEl.addEventListener("change", () => {
         const iso = formatISO(anchorDate);
-        const entry = getEntry(iso);
+        const entry = data[iso] || getEntryForDate(anchorDate);
         entry[key] = inputEl.value;
         saveData();
       });
@@ -974,8 +987,9 @@ Triceps Pushdown 3×12"></textarea>
       const text = newItemInput.value.trim();
       if (!text) return;
       const iso = formatISO(anchorDate);
-      const entry = getEntry(iso);
+      const entry = data[iso] || getEntryForDate(anchorDate);
       entry.checklist.push({ text, done: false });
+      entry.manualEditedChecklist = true;
       newItemInput.value = "";
       saveData();
       renderChecklist(entry.checklist);
@@ -986,78 +1000,6 @@ Triceps Pushdown 3×12"></textarea>
         e.preventDefault();
         addItemBtn.click();
       }
-    });
-
-    planSelect.addEventListener("change", () => {
-      const planId = planSelect.value;
-      loadPlanIntoEditor(planId);
-    });
-
-    savePlanBtn.addEventListener("click", () => {
-      const name = planNameInput.value.trim();
-      const rawItems = planItemsInput.value.split("\n").map(s => s.trim()).filter(Boolean);
-      if (!name || rawItems.length === 0) {
-        alert("Give the plan a name and at least one exercise.");
-        return;
-      }
-
-      let existing = plans.find(p => p.id === name.toLowerCase().replace(/\s+/g, "-"));
-      const id = existing ? existing.id : name.toLowerCase().replace(/\s+/g, "-");
-
-      if (existing) {
-        existing.name = name;
-        existing.items = rawItems;
-      } else {
-        existing = { id, name, items: rawItems };
-        plans.push(existing);
-      }
-
-      savePlans();
-      renderPlansSelect();
-      planSelect.value = existing.id;
-      const iso = formatISO(anchorDate);
-      const entry = getEntry(iso);
-      entry.planId = existing.id;
-      saveData();
-      alert("Plan saved.");
-    });
-
-    deletePlanBtn.addEventListener("click", () => {
-      const selectedId = planSelect.value;
-      if (!selectedId) return;
-      if (!confirm("Delete this plan?")) return;
-
-      plans = plans.filter(p => p.id !== selectedId);
-      savePlans();
-
-      Object.values(data).forEach(entry => {
-        if (entry.planId === selectedId) {
-          entry.planId = null;
-        }
-      });
-      saveData();
-
-      planNameInput.value = "";
-      planItemsInput.value = "";
-      renderPlansSelect();
-      alert("Plan deleted.");
-    });
-
-    applyPlanBtn.addEventListener("click", () => {
-      const planId = planSelect.value;
-      const plan = plans.find(p => p.id === planId);
-      if (!plan) {
-        alert("No plan selected.");
-        return;
-      }
-
-      const iso = formatISO(anchorDate);
-      const entry = getEntry(iso);
-      entry.planId = plan.id;
-      entry.checklist = plan.items.map(text => ({ text, done: false }));
-      saveData();
-      renderChecklist(entry.checklist);
-      alert("Plan applied to today.");
     });
 
     // Initial render
